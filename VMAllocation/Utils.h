@@ -27,10 +27,13 @@ along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 const std::string currentDateTime() 
 {
 	time_t timeNow = time(NULL);
-	struct tm timeStruct;
+	//struct tm timeStruct; //MZ
+	struct tm * timeStruct; //MZ
 	char buf[80];
-	localtime_s(&timeStruct, &timeNow);
-	strftime(buf, sizeof(buf), "%Y-%m-%d_%H-%M-%S", &timeStruct);
+	//localtime_s(&timeStruct, &timeNow); //MZ
+	timeStruct = localtime(&timeNow); //MZ
+	//strftime(buf, sizeof(buf), "%Y-%m-%d_%H-%M-%S", &timeStruct); //MZ
+	strftime(buf, sizeof(buf), "%Y-%m-%d_%H-%M-%S", timeStruct); //MZ
 
 	return buf;
 }

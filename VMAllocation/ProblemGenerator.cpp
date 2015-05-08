@@ -20,6 +20,7 @@ along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include <ctime>
 #include <fstream>
+#include <cstdlib> //MZ
 
 #include "ProblemGenerator.h"
 #include "VM.h"
