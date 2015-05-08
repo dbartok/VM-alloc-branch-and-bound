@@ -23,7 +23,7 @@ along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 #include <stack>
 #include <cassert>
 #include <iostream>
-#include <climits> //MZ
+#include <climits>
 
 #include "VMAllocator.h"
 

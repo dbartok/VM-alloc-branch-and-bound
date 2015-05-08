@@ -27,14 +27,17 @@ along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 const std::string currentDateTime() 
 {
 	time_t timeNow = time(NULL);
-	//struct tm timeStruct; //MZ
-	struct tm * timeStruct; //MZ
 	char buf[80];
-	//localtime_s(&timeStruct, &timeNow); //MZ
-	timeStruct = localtime(&timeNow); //MZ
-	//strftime(buf, sizeof(buf), "%Y-%m-%d_%H-%M-%S", &timeStruct); //MZ
-	strftime(buf, sizeof(buf), "%Y-%m-%d_%H-%M-%S", timeStruct); //MZ
 
+#ifdef _MSC_VER // localtime is considered unsafe by Visual C++, however, the safe version was only implemented there
+	struct tm timeStruct;
+	localtime_s(&timeStruct, &timeNow);
+	strftime(buf, sizeof(buf), "%Y-%m-%d_%H-%M-%S", &timeStruct);
+#else
+	struct tm* timeStruct;
+	timeStruct = localtime(&timeNow);
+	strftime(buf, sizeof(buf), "%Y-%m-%d_%H-%M-%S", timeStruct);
+#endif
 	return buf;
 }
 
