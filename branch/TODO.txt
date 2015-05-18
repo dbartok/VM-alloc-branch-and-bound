@@ -1,0 +1,31 @@
+DONE:
+    x Problem Generator
+    x Bound
+    x Timer
+    x VM, PM structure
+    x VM, PM sorting
+    x Tests, CSV Files
+    x Dynamic variable selection
+    x Fail First heuristic
+    x Symmetry breaking
+    x Multiple resource dimensions
+    x Lexicographic order
+    x Logging
+    x PM types in generator
+    x PM order alterable for a VM (according to resources free or initial allocation)
+    x Logging: how does "best cost so far" change during the algorithm
+    x Terminate when running for x seconds
+    x Bound also when the cost is near the "best cost so far"
+
+TODO:
+    Other sorting methods for PMs (max or sum of resources)
+    Run profiler
+    Iterative cost computation
+    Initialize "best cost so far" with a heuristic
+
+Advanced TODO:
+    Bound: determine a minimal cost for the unallocated VMs (lower bound for the complete allocation)
+    Restarts
+    Best First Search
+    Learning
+    Parallelization
