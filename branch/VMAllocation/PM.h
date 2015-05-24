@@ -33,6 +33,10 @@ bool operator==(const PM& first, const PM& second);
 
 bool operator==(PM& first, PM& second);
 
-bool PMComparator(PM* first, PM* second);
+bool LexicographicPMComparator(PM* first, PM* second);
+
+bool MaximumPMComparator(PM* first, PM* second);
+
+bool SumPMComparator(PM* first, PM* second);
 
 #endif

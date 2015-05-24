@@ -281,9 +281,25 @@ void VMAllocator::resetCandidates(VM* VMHandled)
 {
 	std::vector<PM*>* pms = &(VMHandled->availablePMs);
 
-	// symmetry breaking -> sorted PMs required
-	if (m_params.sortPMsOnTheFly || m_params.symmetryBreaking)
-		std::sort(pms->begin(), pms->end(), PMComparator);
+	switch (m_params.PMSortMethod)
+	{
+	case NONE:
+		if (m_params.symmetryBreaking) 	// symmetry breaking -> sorted PMs required anyway
+			std::sort(pms->begin(), pms->end(), LexicographicPMComparator);
+		break;
+	case LEXICOPGRAPHIC:
+		std::sort(pms->begin(), pms->end(), LexicographicPMComparator);
+		break;
+	case MAXIMUM:
+		std::sort(pms->begin(), pms->end(), MaximumPMComparator);
+		break;
+	case SUM:
+		std::sort(pms->begin(), pms->end(), SumPMComparator);
+		break;
+	default:
+		assert(false); // the enum has to take some value
+		break;
+	}
 
 	// initial PM first -> bringing it to the start of the list
 	if (m_params.initialPMFirst)

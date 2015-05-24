@@ -16,10 +16,11 @@ DONE:
     x Logging: how does "best cost so far" change during the algorithm
     x Terminate when running for x seconds
     x Bound also when the cost is near the "best cost so far"
+    x Other sorting methods for PMs (max or sum of resources)
+    x Run profiler
 
 TODO:
-    Other sorting methods for PMs (max or sum of resources)
-    Run profiler
+    Upper bound for the number of migrations
     Iterative cost computation
     Initialize "best cost so far" with a heuristic
 

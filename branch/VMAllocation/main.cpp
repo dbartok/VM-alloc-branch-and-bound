@@ -14,11 +14,11 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with VMAllocation. If not, see <http://www.gnu.org/licenses/>. 
+along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 */
 
 /*
-The VMAllocation project is currently under development, this version 
+The VMAllocation project is currently under development, this version
 is a research prototype intended only for internal usage.
 */
 
@@ -82,17 +82,17 @@ int main()
 	tempParams.boundThreshold = 1;
 	tempParams.failFirst = true;
 	tempParams.sortVMs = false;
-	tempParams.sortPMsOnTheFly = false;
+	tempParams.PMSortMethod = NONE;
 	tempParams.symmetryBreaking = false;
 	tempParams.initialPMFirst = false;
 	paramsList.push_back(tempParams);
 
 	tempParams.name = "sortPMsOnTheFly";
-	tempParams.sortPMsOnTheFly = true;
+	tempParams.PMSortMethod = MAXIMUM;
 	paramsList.push_back(tempParams);
 
 	tempParams.name = "initialPMFirst";
-	tempParams.sortPMsOnTheFly = false;
+	tempParams.PMSortMethod = NONE;
 	tempParams.initialPMFirst = true;
 	paramsList.push_back(tempParams);
 
@@ -127,7 +127,7 @@ int main()
 	output << endl;
 
 	// run tests
-	cout << "Running " << numTests << " test(s) with " << paramsList.size() << " parameter setups each..."<<endl;
+	cout << "Running " << numTests << " test(s) with " << paramsList.size() << " parameter setups each..." << endl;
 
 	for (int i = 0; i < numTests; i++) // run for all instances
 	{

@@ -29,7 +29,41 @@ bool operator==(PM& first, PM& second)
 	return first.id == second.id;
 }
 
-bool PMComparator(PM* first, PM* second) // ascending order
+// all functions sort in some kind of ascending order
+
+// lexicographic order
+bool LexicographicPMComparator(PM* first, PM* second) 
 {
 	return first->capacity < second->capacity;
+}
+
+// maximum of resources
+bool MaximumPMComparator(PM* first, PM* second)
+{
+	int firstMax  = 0;
+	int secondMax = 0;
+	for (size_t i = 0; i < first->capacity.size(); i++)
+	{
+		if (first->capacity[i] > firstMax)
+			firstMax = first->capacity[i];
+
+		if (second->capacity[i] > secondMax)
+			secondMax = second->capacity[i];
+	}
+
+	return firstMax < secondMax;
+}
+
+// sum of resources
+bool SumPMComparator(PM* first, PM* second)
+{
+	int firstSum = 0;
+	int secondSum = 0;
+	for (size_t i = 0; i < first->capacity.size(); i++)
+	{
+		firstSum += first->capacity[i];
+		secondSum += second->capacity[i];
+	}
+
+	return firstSum < secondSum;
 }
