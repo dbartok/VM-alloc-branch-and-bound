@@ -50,6 +50,8 @@ class VMAllocator
 
 	std::vector<int> m_allocations; // current allocations
 	std::vector<int> m_bestAllocation; // best allocation so far
+	int m_numMigrations;
+	int m_numPMsOn;
 	double m_bestSoFar; // best cost so far
 
 	std::stack<VM*> m_VMStack; // stack of allocated VMs

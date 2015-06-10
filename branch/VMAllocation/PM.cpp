@@ -34,7 +34,7 @@ bool operator==(PM& first, PM& second)
 // lexicographic order
 bool LexicographicPMComparator(PM* first, PM* second) 
 {
-	return first->capacity < second->capacity;
+	return first->resourcesFree < second->resourcesFree;
 }
 
 // maximum of resources
@@ -42,13 +42,13 @@ bool MaximumPMComparator(PM* first, PM* second)
 {
 	int firstMax  = 0;
 	int secondMax = 0;
-	for (size_t i = 0; i < first->capacity.size(); i++)
+	for (size_t i = 0; i < first->resourcesFree.size(); i++)
 	{
-		if (first->capacity[i] > firstMax)
-			firstMax = first->capacity[i];
+		if (first->resourcesFree[i] > firstMax)
+			firstMax = first->resourcesFree[i];
 
-		if (second->capacity[i] > secondMax)
-			secondMax = second->capacity[i];
+		if (second->resourcesFree[i] > secondMax)
+			secondMax = second->resourcesFree[i];
 	}
 
 	return firstMax < secondMax;
@@ -59,11 +59,22 @@ bool SumPMComparator(PM* first, PM* second)
 {
 	int firstSum = 0;
 	int secondSum = 0;
-	for (size_t i = 0; i < first->capacity.size(); i++)
+	for (size_t i = 0; i < first->resourcesFree.size(); i++)
 	{
-		firstSum += first->capacity[i];
-		secondSum += second->capacity[i];
+		firstSum += first->resourcesFree[i];
+		secondSum += second->resourcesFree[i];
 	}
 
 	return firstSum < secondSum;
+}
+
+bool PM::isOn()
+{
+	for (size_t i = 0; i < resourcesFree.size(); i++)
+	{
+		if (resourcesFree[i] != capacity[i])
+			return true;
+	}
+
+	return false;
 }

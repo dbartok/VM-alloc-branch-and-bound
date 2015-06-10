@@ -80,6 +80,7 @@ int main()
 	tempParams.name = "fail first";
 	tempParams.timeout = INT_MAX;
 	tempParams.boundThreshold = 1;
+	tempParams.maxMigrations = 10;
 	tempParams.failFirst = true;
 	tempParams.sortVMs = false;
 	tempParams.PMSortMethod = NONE;

@@ -87,54 +87,26 @@ bool VMAllocator::isAllocationValid()
 	return true;
 }
 
-// returns the cost of the current allocation
-double VMAllocator::computeCost()
-{
-	//--Number of PMs ON--
-	std::vector<bool> PMsOn; // maps to each PM whether it is ON or not
-
-	int numPMsOn = 0; // number of PMs on
-	for (int i = 0; i < m_numPMs; i++)
-	{
-		PMsOn.push_back(false); // every PM is OFF by default
-	}
-
-	for (int vm = 0; vm < m_numVMs; vm++)
-	{
-		int targetPM = m_allocations[vm];
-		if (targetPM != -1) // VM is allocated
-		{
-			if (PMsOn[targetPM] == 0) // this PM has to be turned ON
-			{
-				numPMsOn++;
-			}
-			PMsOn[targetPM] = 1;
-		}
-	}
-
-	//--Number of migrations--
-	int numMigrations = 0;
-	for (int vm = 0; vm < m_numVMs; vm++)
-	{
-		int targetPMid = m_allocations[vm];
-		if (targetPMid != -1 && m_problem.PMs[targetPMid].id != m_problem.VMs[vm].initial)
-		{
-			numMigrations++;
-		}
-	}
-
-	return COEFF_NR_OF_ACTIVE_HOSTS * numPMsOn + COEFF_NR_OF_MIGRATIONS * numMigrations;
-
-}
-
 // allocates a VM to a PM
 void VMAllocator::allocate(VM* VMHandled, PM* PMCandidate)
 {
 	assert(m_allocations[VMHandled->id] == -1); // we should only allocate unallocated VMs
 
+	//--Number of PMs ON--
+	if (!(PMCandidate->isOn()))
+	{
+		m_numPMsOn++;
+	}
+
 	m_allocations[VMHandled->id] = PMCandidate->id;
 	for (int i = 0; i < m_dimension; i++)
 		PMCandidate->resourcesFree[i] -= VMHandled->demand[i];
+
+	//--Number of migrations--
+	if (PMCandidate->id != VMHandled->initial)
+	{
+		m_numMigrations++;
+	}
 
 	Change change;
 	change.VMAllocated = VMHandled;
@@ -149,7 +121,7 @@ void VMAllocator::allocate(VM* VMHandled, PM* PMCandidate)
 		}
 
 		std::vector<PM*>* availablePMs = &m_problem.VMs[vm].availablePMs;
-		std::vector<PM*>::iterator found = std::find(m_problem.VMs[vm].availablePMs.begin(), m_problem.VMs[vm].availablePMs.end(), PMCandidate);
+		std::vector<PM*>::iterator found = std::find(availablePMs->begin(), availablePMs->end(), PMCandidate);
 
 		if (found != availablePMs->end() && !VMFitsInPM(m_problem.VMs[vm], *PMCandidate)) // if the VM fitted onto the PM but doesn't fit anymore
 		{
@@ -173,6 +145,18 @@ void VMAllocator::deAllocate(VM* VMHandled)
 	m_allocations[VMHandled->id] = -1;
 	for (int i = 0; i < m_dimension; i++)
 		PMCandidate->resourcesFree[i] += VMHandled->demand[i];
+
+	//--Number of PMs ON--
+	if (!(PMCandidate->isOn()))
+	{
+		m_numPMsOn--;
+	}
+
+	//--Number of migrations--
+	if (PMCandidate->id != VMHandled->initial)
+	{
+		m_numMigrations--;
+	}
 		
 	Change change = m_changeStack.top();
 	m_changeStack.pop();
@@ -386,6 +370,9 @@ VMAllocator::VMAllocator(AllocationProblem pr, AllocatorParams pa, std::ofstream
 	m_numPMs = m_problem.PMs.size();
 	m_dimension = m_problem.VMs[0].demand.size(); // only works if all VMs have the same number of dimensions
 
+	// at the start there are no allocations
+	m_numMigrations = 0; 
+	m_numPMsOn = 0;
 	m_bestSoFar = INT_MAX;
 
 	for (int i = 0; i < m_numVMs; i++)
@@ -457,13 +444,22 @@ void VMAllocator::solveIterative()
 			m_log << "Current allocation: ";
 				for (auto x : m_allocations)
 					m_log << x << " ";
-			m_log << ". ";
+			m_log << " -> ";
 		#endif
 		assert(isAllocationValid());
 
-		double cost = computeCost();
+		if (m_numMigrations > m_params.maxMigrations) // ran out of migrations
+		{
+			deAllocate(VMHandled);
+			#ifdef VERBOSE_ALG_STEPS
+				m_log << "\tToo many migrations. Deallocated VM " << VMHandled->id << "." << std::endl;
+			#endif
+			continue;
+		}
+
+		double cost = COEFF_NR_OF_ACTIVE_HOSTS * m_numPMsOn + COEFF_NR_OF_MIGRATIONS * m_numMigrations;
 		#ifdef VERBOSE_ALG_STEPS
-			m_log << "Cost is " << cost << ". "<<std::endl;
+		m_log << "numPMsOn = " << m_numPMsOn << ", numMigrations = " << m_numMigrations <<", cost is: "<< cost << ". " << std::endl;
 		#endif
 
 		if (cost >= m_bestSoFar * m_params.boundThreshold) // bound

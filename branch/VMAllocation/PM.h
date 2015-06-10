@@ -27,6 +27,8 @@ struct PM
 	int id;
 	std::vector<int> capacity;
 	std::vector<int> resourcesFree;
+
+	bool isOn();
 };
 
 bool operator==(const PM& first, const PM& second);

@@ -44,6 +44,8 @@ struct AllocatorParams
 
 	double timeout; // timeout in seconds
 	double boundThreshold; // bound also when (cost >= bestSoFar * boundThreshold), makes sense when between 0 and 1
+
+	int maxMigrations;
 };
 
 #endif
