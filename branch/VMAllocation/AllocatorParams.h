@@ -23,7 +23,7 @@ along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <string>
 
-enum PMSortType
+enum SortType
 {
 	NONE,
 	LEXICOPGRAPHIC,
@@ -37,8 +37,8 @@ struct AllocatorParams
 
 	bool failFirst;
 
-	bool sortVMs;
-	PMSortType PMSortMethod;
+	SortType PMSortMethod;
+	SortType VMSortMethod;
 	bool initialPMFirst;
 	bool symmetryBreaking; // causes the loss of optimality
 

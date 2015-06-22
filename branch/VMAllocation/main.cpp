@@ -82,7 +82,7 @@ int main()
 	tempParams.boundThreshold = 1;
 	tempParams.maxMigrations = 10;
 	tempParams.failFirst = true;
-	tempParams.sortVMs = false;
+	tempParams.VMSortMethod = NONE;
 	tempParams.PMSortMethod = NONE;
 	tempParams.symmetryBreaking = false;
 	tempParams.initialPMFirst = false;

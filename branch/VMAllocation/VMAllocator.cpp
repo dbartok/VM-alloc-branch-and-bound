@@ -65,10 +65,24 @@ void VMAllocator::preprocess()
 		}
 		m_log << std::endl;
 	#endif
+	
 
-	if (m_params.sortVMs)
+	switch (m_params.VMSortMethod)
 	{
-		std::sort(m_problem.VMs.begin(), m_problem.VMs.end(), VMComparator);
+	case NONE:
+		break;
+	case LEXICOPGRAPHIC:
+		std::sort(m_problem.VMs.begin(), m_problem.VMs.end(), LexicographicVMComparator);
+		break;
+	case MAXIMUM:
+		std::sort(m_problem.VMs.begin(), m_problem.VMs.end(), MaximumVMComparator);
+		break;
+	case SUM:
+		std::sort(m_problem.VMs.begin(), m_problem.VMs.end(), SumVMComparator);
+		break;
+	default:
+		assert(false); // the enum has to take some value
+		break;
 	}
 }
 
@@ -103,7 +117,7 @@ void VMAllocator::allocate(VM* VMHandled, PM* PMCandidate)
 		PMCandidate->resourcesFree[i] -= VMHandled->demand[i];
 
 	//--Number of migrations--
-	if (PMCandidate->id != VMHandled->initial)
+	if (VMHandled->initial != -1 && PMCandidate->id != VMHandled->initial)
 	{
 		m_numMigrations++;
 	}
@@ -153,7 +167,7 @@ void VMAllocator::deAllocate(VM* VMHandled)
 	}
 
 	//--Number of migrations--
-	if (PMCandidate->id != VMHandled->initial)
+	if (VMHandled->initial != -1 && PMCandidate->id != VMHandled->initial)
 	{
 		m_numMigrations--;
 	}

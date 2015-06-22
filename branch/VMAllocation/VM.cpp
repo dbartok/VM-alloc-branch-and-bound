@@ -19,7 +19,41 @@ along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 
 #include "VM.h"
 
-bool VMComparator(const VM& first, const VM& second) // descending order
+// all functions sort in some kind of descending order
+
+// lexicographic order
+bool LexicographicVMComparator(const VM& first, const VM& second)
 {
 	return first.demand > second.demand;
+}
+
+// maximum of resources
+bool MaximumVMComparator(const VM& first, const VM& second)
+{
+	int firstMax = 0;
+	int secondMax = 0;
+	for (size_t i = 0; i < first.demand.size(); i++)
+	{
+		if (first.demand[i] > firstMax)
+			firstMax = first.demand[i];
+
+		if (second.demand[i] > secondMax)
+			secondMax = second.demand[i];
+	}
+
+	return firstMax > secondMax;
+}
+
+// sum of resources
+bool SumVMComparator(const VM& first, const VM& second)
+{
+	int firstSum = 0;
+	int secondSum = 0;
+	for (size_t i = 0; i < first.demand.size(); i++)
+	{
+		firstSum += first.demand[i];
+		secondSum += second.demand[i];
+	}
+
+	return firstSum > secondSum;
 }

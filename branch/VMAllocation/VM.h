@@ -35,5 +35,11 @@ struct VM
 
 bool VMComparator(const VM& first, const VM& second);
 
+bool LexicographicVMComparator(const VM& first, const VM& second);
+
+bool MaximumVMComparator(const VM& first, const VM& second);
+
+bool SumVMComparator(const VM& first, const VM& second);
+
 
 #endif
