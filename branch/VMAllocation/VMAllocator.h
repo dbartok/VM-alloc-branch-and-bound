@@ -29,9 +29,7 @@ along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 #include "AllocatorParams.h"
 #include "Timer.h"
 #include "PM.h"
-
-#define COEFF_NR_OF_ACTIVE_HOSTS 2
-#define COEFF_NR_OF_MIGRATIONS 1
+#include "global_params.h"
 
 #define VERBOSE_BASIC // logging configuration, input problem and the solution
 

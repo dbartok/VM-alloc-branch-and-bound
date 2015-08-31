@@ -34,6 +34,7 @@ Result files are created in the .\logs folder.
 #include <climits>
 
 #include "VMAllocator.h"
+#include "IlpAllocator.h"
 #include "AllocationProblem.h"
 #include "ProblemGenerator.h"
 #include "Timer.h"
@@ -63,11 +64,11 @@ int main()
 	int numTests = 1;
 	ProblemGenerator generator
 					   (2,		// dimensions
-						4,		// VMs
-						2,		// PMs
+						30,		// VMs
+						15,		// PMs
 						1,		// VM min
-						5,		// VM max
-						5,		// PM min
+						4,		// VM max
+						6,		// PM min
 						10,		// PM max
 						2);		// num PM types
 
@@ -78,9 +79,9 @@ int main()
 
 	// setup parameter configurations
 	tempParams.name = "fail first";
-	tempParams.timeout = INT_MAX;
+	tempParams.timeout = 10;
 	tempParams.boundThreshold = 1;
-	tempParams.maxMigrations = 10;
+	tempParams.maxMigrations = 20;
 	tempParams.failFirst = true;
 	tempParams.VMSortMethod = NONE;
 	tempParams.PMSortMethod = NONE;
@@ -115,16 +116,17 @@ int main()
 	for (unsigned i = 0; i < paramsList.size(); i++) // columns for runtimes
 	{
 		output << paramsList[i].name;
-		output << ", ";
+		output << "; ";
 	}
 	for (unsigned i = 0; i < paramsList.size(); i++) // columns for costs
 	{
 		output << paramsList[i].name + ": cost";
-		if (i != paramsList.size() - 1)
-		{
-			output << ", ";
-		}
+//		if (i != paramsList.size() - 1)
+//		{
+			output << "; ";
+//		}
 	}
+	output << "Gurobi cost; Lpsolve cost";
 	output << endl;
 
 	// run tests
@@ -144,7 +146,7 @@ int main()
 			double elapsed = t.getElapsedTime();
 			cout << " DONE!" << endl;
 			output << elapsed;
-			output << ", ";
+			output << "; ";
 			double opt = VMA.getOptimum();
 			solutions.push_back(opt);
 #ifdef VERBOSE_BASIC			
@@ -152,17 +154,30 @@ int main()
 			log << "==============================" << endl;
 #endif
 		}
+
 		for (unsigned i = 0; i < paramsList.size(); i++)
 		{
 			output << solutions[i];
-			if (i != paramsList.size() - 1)
-			{
-				output << ", ";
-			}
+//			if (i != paramsList.size() - 1)
+//			{
+				output << "; ";
+//			}
 		}
+
+		IlpAllocator IA1(problem, paramsList[0], log, GUROBI);
+		IA1.solveIterative();
+		double opt = IA1.getOptimum();
+		output << opt << "; ";
+		IlpAllocator IA2(problem, paramsList[0], log, LPSOLVE);
+		IA2.solveIterative();
+		opt = IA2.getOptimum();
+		output << opt;
+
 		output << endl;
 	}
 
+	output.close();
+	log.close();
 	cout << "(Finished.)" << endl;
-	getchar();
+	//getchar();
 }

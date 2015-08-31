@@ -42,7 +42,7 @@ bool MaximumPMComparator(PM* first, PM* second)
 {
 	int firstMax  = 0;
 	int secondMax = 0;
-	for (size_t i = 0; i < first->resourcesFree.size(); i++)
+	for (std::size_t i = 0; i < first->resourcesFree.size(); i++)
 	{
 		if (first->resourcesFree[i] > firstMax)
 			firstMax = first->resourcesFree[i];
@@ -59,7 +59,7 @@ bool SumPMComparator(PM* first, PM* second)
 {
 	int firstSum = 0;
 	int secondSum = 0;
-	for (size_t i = 0; i < first->resourcesFree.size(); i++)
+	for (std::size_t i = 0; i < first->resourcesFree.size(); i++)
 	{
 		firstSum += first->resourcesFree[i];
 		secondSum += second->resourcesFree[i];
@@ -70,7 +70,7 @@ bool SumPMComparator(PM* first, PM* second)
 
 bool PM::isOn()
 {
-	for (size_t i = 0; i < resourcesFree.size(); i++)
+	for (std::size_t i = 0; i < resourcesFree.size(); i++)
 	{
 		if (resourcesFree[i] != capacity[i])
 			return true;

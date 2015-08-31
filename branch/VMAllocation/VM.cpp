@@ -32,7 +32,7 @@ bool MaximumVMComparator(const VM& first, const VM& second)
 {
 	int firstMax = 0;
 	int secondMax = 0;
-	for (size_t i = 0; i < first.demand.size(); i++)
+	for (std::size_t i = 0; i < first.demand.size(); i++)
 	{
 		if (first.demand[i] > firstMax)
 			firstMax = first.demand[i];
@@ -49,7 +49,7 @@ bool SumVMComparator(const VM& first, const VM& second)
 {
 	int firstSum = 0;
 	int secondSum = 0;
-	for (size_t i = 0; i < first.demand.size(); i++)
+	for (std::size_t i = 0; i < first.demand.size(); i++)
 	{
 		firstSum += first.demand[i];
 		secondSum += second.demand[i];
