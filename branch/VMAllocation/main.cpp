@@ -64,8 +64,8 @@ int main()
 	int numTests = 1;
 	ProblemGenerator generator
 					   (2,		// dimensions
-						30,		// VMs
-						15,		// PMs
+						1000,		// VMs
+						500,		// PMs
 						1,		// VM min
 						4,		// VM max
 						6,		// PM min
@@ -79,9 +79,9 @@ int main()
 
 	// setup parameter configurations
 	tempParams.name = "fail first";
-	tempParams.timeout = 10;
+	tempParams.timeout = 30;
 	tempParams.boundThreshold = 1;
-	tempParams.maxMigrations = 20;
+	tempParams.maxMigrations = 100;
 	tempParams.failFirst = true;
 	tempParams.VMSortMethod = NONE;
 	tempParams.PMSortMethod = NONE;
@@ -89,15 +89,16 @@ int main()
 	tempParams.initialPMFirst = false;
 	paramsList.push_back(tempParams);
 
-	tempParams.name = "sortPMsOnTheFly";
-	tempParams.PMSortMethod = MAXIMUM;
-	paramsList.push_back(tempParams);
+//	tempParams.name = "sortPMsOnTheFly";
+//	tempParams.PMSortMethod = MAXIMUM;
+//	paramsList.push_back(tempParams);
 
 	tempParams.name = "initialPMFirst";
 	tempParams.PMSortMethod = NONE;
 	tempParams.initialPMFirst = true;
 	paramsList.push_back(tempParams);
 
+/*
 	tempParams.name = "symmetryBreaking";
 	tempParams.symmetryBreaking = true;
 	tempParams.initialPMFirst = false;
@@ -106,6 +107,7 @@ int main()
 	tempParams.name = "symmetryBreaking + initialPMFirst";
 	tempParams.initialPMFirst = true;
 	paramsList.push_back(tempParams);
+*/
 
 	// initialize result file
 	#ifdef WIN32
@@ -135,7 +137,7 @@ int main()
 	for (int i = 0; i < numTests; i++) // run for all instances
 	{
 		cout << "Instance " << i << ":" << endl;
-		AllocationProblem problem = generator.generate();
+		AllocationProblem problem = generator.generate_ff();
 		vector<double> solutions;
 		for (unsigned i = 0; i < paramsList.size(); i++) // run current instance for all configurations
 		{

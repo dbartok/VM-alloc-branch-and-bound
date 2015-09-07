@@ -93,6 +93,44 @@ AllocationProblem ProblemGenerator::generate()
 	return problem;
 }
 
+AllocationProblem ProblemGenerator::generate_ff()
+{
+	AllocationProblem problem=generate();
+	for (unsigned i=0; i<problem.VMs.size(); i++)
+	{
+		bool found=false;
+		unsigned j=0;
+		while(!found && j<problem.PMs.size())
+		{
+			bool fit=true;
+			for(unsigned k=0; k<problem.VMs[i].demand.size(); k++)
+			{
+				if(problem.VMs[i].demand[k]>problem.PMs[j].resourcesFree[k])
+					fit=false;
+			}
+			if(fit)
+				found=true;
+			j++;
+		}
+		if(found)
+		{
+			problem.VMs[i].initial=j-1;
+			for(unsigned k=0; k<problem.PMs[j-1].resourcesFree.size(); k++)
+				problem.PMs[j-1].resourcesFree[k]-=problem.VMs[i].demand[k];
+		}
+	}
+
+	for(unsigned j=0; j<problem.PMs.size(); j++)
+	{
+		for(unsigned k=0; k<problem.PMs[j].resourcesFree.size(); k++)
+		{
+			problem.PMs[j].resourcesFree[k]=problem.PMs[j].capacity[k];
+		}
+	}
+
+	return problem;
+}
+
 AllocationProblem ProblemGenerator::testFromFile(std::string path)
 {
 	std::ifstream fileIn(path.c_str());

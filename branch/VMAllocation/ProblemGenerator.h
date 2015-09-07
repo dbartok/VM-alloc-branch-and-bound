@@ -39,5 +39,6 @@ public:
 	ProblemGenerator(int dimension, int nvms, int npms, int minrd, int maxrd, int minrs, int maxrs, int types);
 	int randomIntBetween(int min, int max);
 	AllocationProblem generate();
+	AllocationProblem generate_ff();
 	AllocationProblem testFromFile(std::string path);
 };
