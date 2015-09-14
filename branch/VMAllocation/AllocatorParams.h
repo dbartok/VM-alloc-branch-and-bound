@@ -22,6 +22,7 @@ along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 
 #include <vector>
 #include <string>
+#include <iostream>
 
 enum SortType
 {
@@ -47,5 +48,31 @@ struct AllocatorParams
 
 	int maxMigrations;
 };
+
+static SortType stringToSortType(const std::string& toConvert)
+{
+	if (toConvert == "NONE")
+	{
+		return NONE;
+	}
+	else if (toConvert == "LEXICOPGRAPHIC")
+	{
+		return LEXICOPGRAPHIC;
+	}
+	else if (toConvert == "MAXIMUM")
+	{
+		return MAXIMUM;
+	}
+	else if (toConvert == "SUM")
+	{
+		return SUM;
+	}
+	else
+	{
+		std::cout << "WARNING: Invalid Sort Type. Defaulting to NONE." << std::endl;
+		return NONE;
+	}
+}
+
 
 #endif

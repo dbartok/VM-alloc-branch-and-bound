@@ -40,6 +40,7 @@ Result files are created in the .\logs folder.
 #include "Timer.h"
 #include "AllocatorParams.h"
 #include "Utils.h"
+#include "ConfigParser.h"
 
 using std::cout;
 using std::vector;
@@ -61,53 +62,12 @@ int main()
 		return 1;
 	}
 
-	int numTests = 1;
-	ProblemGenerator generator
-					   (2,		// dimensions
-						1000,		// VMs
-						500,		// PMs
-						1,		// VM min
-						4,		// VM max
-						6,		// PM min
-						10,		// PM max
-						2);		// num PM types
-
-
 	Timer t;
-	vector <AllocatorParams> paramsList;
-	AllocatorParams tempParams;
 
-	// setup parameter configurations
-	tempParams.name = "fail first";
-	tempParams.timeout = 30;
-	tempParams.boundThreshold = 1;
-	tempParams.maxMigrations = 100;
-	tempParams.failFirst = true;
-	tempParams.VMSortMethod = NONE;
-	tempParams.PMSortMethod = NONE;
-	tempParams.symmetryBreaking = false;
-	tempParams.initialPMFirst = false;
-	paramsList.push_back(tempParams);
-
-//	tempParams.name = "sortPMsOnTheFly";
-//	tempParams.PMSortMethod = MAXIMUM;
-//	paramsList.push_back(tempParams);
-
-	tempParams.name = "initialPMFirst";
-	tempParams.PMSortMethod = NONE;
-	tempParams.initialPMFirst = true;
-	paramsList.push_back(tempParams);
-
-/*
-	tempParams.name = "symmetryBreaking";
-	tempParams.symmetryBreaking = true;
-	tempParams.initialPMFirst = false;
-	paramsList.push_back(tempParams);
-
-	tempParams.name = "symmetryBreaking + initialPMFirst";
-	tempParams.initialPMFirst = true;
-	paramsList.push_back(tempParams);
-*/
+	ConfigParser parser("config.txt");
+	parser.parse();
+	std::unique_ptr<ProblemGenerator> generator = parser.getGenerator();
+	vector <AllocatorParams> paramsList = parser.getParamsList();
 
 	// initialize result file
 	#ifdef WIN32
@@ -128,16 +88,19 @@ int main()
 			output << "; ";
 //		}
 	}
+
+#ifndef WIN32
 	output << "Gurobi cost; Lpsolve cost";
+#endif
 	output << endl;
 
 	// run tests
-	cout << "Running " << numTests << " test(s) with " << paramsList.size() << " parameter setups each..." << endl;
+	cout << "Running " << parser.getNumTests() << " test(s) with " << paramsList.size() << " parameter setups each..." << endl;
 
-	for (int i = 0; i < numTests; i++) // run for all instances
+	for (int i = 0; i < parser.getNumTests(); i++) // run for all instances
 	{
 		cout << "Instance " << i << ":" << endl;
-		AllocationProblem problem = generator.generate_ff();
+		AllocationProblem problem = generator->generate_ff();
 		vector<double> solutions;
 		for (unsigned i = 0; i < paramsList.size(); i++) // run current instance for all configurations
 		{
@@ -166,6 +129,7 @@ int main()
 //			}
 		}
 
+#ifndef WIN32
 		IlpAllocator IA1(problem, paramsList[0], log, GUROBI);
 		IA1.solveIterative();
 		double opt = IA1.getOptimum();
@@ -174,7 +138,7 @@ int main()
 		IA2.solveIterative();
 		opt = IA2.getOptimum();
 		output << opt;
-
+#endif
 		output << endl;
 	}
 

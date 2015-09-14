@@ -17,6 +17,9 @@ You should have received a copy of the GNU General Public License
 along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifndef PROBLEMGENERATOR_H
+#define PROBLEMGENERATOR_H
+
 #include <string>
 
 #include "AllocationProblem.h"
@@ -25,6 +28,7 @@ along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 class ProblemGenerator
 {
 private:
+
 	int dimension;
 	int numVMs;
 	int numPMs;
@@ -42,3 +46,5 @@ public:
 	AllocationProblem generate_ff();
 	AllocationProblem testFromFile(std::string path);
 };
+
+#endif

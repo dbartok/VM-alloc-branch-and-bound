@@ -34,7 +34,9 @@ vmallocation_exe_CXX_SRCS= PM.cpp \
 			Timer.cpp \
 			VM.cpp \
 			VMAllocator.cpp \
-			main.cpp
+			main.cpp \
+            ConfigParser.cpp \
+            IlpAllocator.cpp
 vmallocation_exe_RC_SRCS=
 vmallocation_exe_LDFLAGS= 
 vmallocation_exe_ARFLAGS=

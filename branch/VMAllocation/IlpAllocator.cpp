@@ -19,6 +19,7 @@ along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 
 #include  <stdlib.h>
 #include  <math.h>
+#include  <sstream>
 #include "IlpAllocator.h"
 
 using std::ofstream;
@@ -167,18 +168,18 @@ void IlpAllocator::create_lp(char *filename)
 
 void IlpAllocator::solveIterative()
 {
-	char command[100];
+	std::ostringstream command;
 	if(m_solver==GUROBI)
 	{
 		create_lp("ilp_gurobi.lp");
-		sprintf(command,"gurobi_cl ResultFile=sol_gurobi.sol TimeLimit=%f ilp_gurobi.lp",m_params.timeout);
+		command << "gurobi_cl ResultFile=sol_gurobi.sol TimeLimit=" << m_params.timeout << " ilp_gurobi.lp";
 	}
 	if(m_solver==LPSOLVE)
 	{
 		create_lp("ilp_lpsolve.lp");
-		sprintf(command,"lp_solve -timeout %d ilp_lpsolve.lp > sol_lpsolve.sol",(int)round(m_params.timeout));
+		command << "lp_solve -timeout " << (int)round(m_params.timeout) << " ilp_lpsolve.lp > sol_lpsolve.sol";
 	}
-	system(command);
+	system(command.str().c_str());
 }
 
 double IlpAllocator::getOptimum()
