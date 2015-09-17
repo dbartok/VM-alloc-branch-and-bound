@@ -27,7 +27,7 @@ along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 enum SortType
 {
 	NONE,
-	LEXICOPGRAPHIC,
+	LEXICOGRAPHIC,
 	MAXIMUM,
 	SUM
 };
@@ -55,9 +55,9 @@ static SortType stringToSortType(const std::string& toConvert)
 	{
 		return NONE;
 	}
-	else if (toConvert == "LEXICOPGRAPHIC")
+	else if (toConvert == "LEXICOGRAPHIC")
 	{
-		return LEXICOPGRAPHIC;
+		return LEXICOGRAPHIC;
 	}
 	else if (toConvert == "MAXIMUM")
 	{

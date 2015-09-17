@@ -29,17 +29,36 @@ bool operator==(PM& first, PM& second)
 	return first.id == second.id;
 }
 
-// all functions sort in some kind of ascending order
+// all functions sort in some kind of ascending order for PMs already on (best fit) and descending order for PMs turned off (we should turn the biggest one on)
 
 // lexicographic order
 bool LexicographicPMComparator(PM* first, PM* second) 
 {
-	return first->resourcesFree < second->resourcesFree;
+	bool firstIsOn = first->isOn();
+	bool secondIsOn = second->isOn();
+
+	if (!firstIsOn && secondIsOn)
+		return true;
+	if (!secondIsOn && firstIsOn)
+		return false;
+	if (firstIsOn && secondIsOn)
+		return first->resourcesFree < second->resourcesFree;
+
+	// both are off
+	return first->resourcesFree > second->resourcesFree;
 }
 
 // maximum of resources
 bool MaximumPMComparator(PM* first, PM* second)
 {
+	bool firstIsOn = first->isOn();
+	bool secondIsOn = second->isOn();
+
+	if (!firstIsOn && secondIsOn)
+		return true;
+	if (!secondIsOn && firstIsOn)
+		return false;
+
 	int firstMax  = 0;
 	int secondMax = 0;
 	for (std::size_t i = 0; i < first->resourcesFree.size(); i++)
@@ -51,12 +70,24 @@ bool MaximumPMComparator(PM* first, PM* second)
 			secondMax = second->resourcesFree[i];
 	}
 
-	return firstMax < secondMax;
+	if (firstIsOn && secondIsOn)
+		return firstMax < secondMax;
+
+	// both are off
+	return secondMax > firstMax;
 }
 
 // sum of resources
 bool SumPMComparator(PM* first, PM* second)
 {
+	bool firstIsOn = first->isOn();
+	bool secondIsOn = second->isOn();
+
+	if (!firstIsOn && secondIsOn)
+		return true;
+	if (!secondIsOn && firstIsOn)
+		return false;
+
 	int firstSum = 0;
 	int secondSum = 0;
 	for (std::size_t i = 0; i < first->resourcesFree.size(); i++)
@@ -65,6 +96,10 @@ bool SumPMComparator(PM* first, PM* second)
 		secondSum += second->resourcesFree[i];
 	}
 
+	if (firstIsOn && secondIsOn)
+		return firstSum < secondSum;
+
+	// both are off
 	return firstSum < secondSum;
 }
 

@@ -71,7 +71,7 @@ void VMAllocator::preprocess()
 	{
 	case NONE:
 		break;
-	case LEXICOPGRAPHIC:
+	case LEXICOGRAPHIC:
 		std::sort(m_problem.VMs.begin(), m_problem.VMs.end(), LexicographicVMComparator);
 		break;
 	case MAXIMUM:
@@ -285,7 +285,7 @@ void VMAllocator::resetCandidates(VM* VMHandled)
 		if (m_params.symmetryBreaking) 	// symmetry breaking -> sorted PMs required anyway
 			std::sort(pms->begin(), pms->end(), LexicographicPMComparator);
 		break;
-	case LEXICOPGRAPHIC:
+	case LEXICOGRAPHIC:
 		std::sort(pms->begin(), pms->end(), LexicographicPMComparator);
 		break;
 	case MAXIMUM:
