@@ -37,9 +37,9 @@ bool LexicographicPMComparator(PM* first, PM* second)
 	bool firstIsOn = first->isOn();
 	bool secondIsOn = second->isOn();
 
-	if (!firstIsOn && secondIsOn)
+	if (firstIsOn && !secondIsOn)
 		return true;
-	if (!secondIsOn && firstIsOn)
+	if (secondIsOn && !firstIsOn)
 		return false;
 	if (firstIsOn && secondIsOn)
 		return first->resourcesFree < second->resourcesFree;
@@ -54,9 +54,9 @@ bool MaximumPMComparator(PM* first, PM* second)
 	bool firstIsOn = first->isOn();
 	bool secondIsOn = second->isOn();
 
-	if (!firstIsOn && secondIsOn)
+	if (firstIsOn && !secondIsOn)
 		return true;
-	if (!secondIsOn && firstIsOn)
+	if (secondIsOn && !firstIsOn)
 		return false;
 
 	int firstMax  = 0;
@@ -83,9 +83,9 @@ bool SumPMComparator(PM* first, PM* second)
 	bool firstIsOn = first->isOn();
 	bool secondIsOn = second->isOn();
 
-	if (!firstIsOn && secondIsOn)
+	if (firstIsOn && !secondIsOn)
 		return true;
-	if (!secondIsOn && firstIsOn)
+	if (secondIsOn && !firstIsOn)
 		return false;
 
 	int firstSum = 0;
@@ -100,7 +100,7 @@ bool SumPMComparator(PM* first, PM* second)
 		return firstSum < secondSum;
 
 	// both are off
-	return firstSum < secondSum;
+	return firstSum > secondSum;
 }
 
 bool PM::isOn()
