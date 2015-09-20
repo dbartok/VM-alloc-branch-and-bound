@@ -34,8 +34,8 @@ along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 #define VERBOSE_BASIC // logging configuration, input problem and the solution
 
 // recommended to choose maximum one of the following, else the log files become cramped
-#define VERBOSE_ALG_STEPS // logging steps of the algorithm in a human readable form
-#define VERBOSE_COST_CHANGE // logging how the "best cost so far" changes (with timestamp)
+//#define VERBOSE_ALG_STEPS // logging steps of the algorithm in a human readable form
+//#define VERBOSE_COST_CHANGE // logging how the "best cost so far" changes (with timestamp)
 
 class VMAllocator
 {
@@ -45,6 +45,10 @@ class VMAllocator
 	int m_dimension; // dimension of resources
 	int m_numVMs; // number of Virtual Machines
 	int m_numPMs; // number of Physical Machines
+
+	int m_numAdditionalPMs; // number of additional PMs required if we now leave all VMs on their initial PM
+	int m_maxNumVMsOnOnePM; // maximal number of "initial VMs" on one PM (initialized once, but not maintained)
+	std::vector<int> m_additionalVMCounts; // maps number of occurences to each "additional VM count"
 
 	std::vector<int> m_allocations; // current allocations
 	std::vector<int> m_bestAllocation; // best allocation so far
@@ -77,7 +81,7 @@ class VMAllocator
 	VM* backtrackToPreviousVM();
 	PM* getNextPMCandidate(VM* VMHandled);
 	void setNextPMCandidate(VM* VMHandled);
-
+	double computeMinimalExtraCost();
 
 public:
 	VMAllocator(AllocationProblem pr, AllocatorParams pa, std::ofstream& l);

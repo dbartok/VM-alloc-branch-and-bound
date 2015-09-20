@@ -38,6 +38,8 @@ struct AllocatorParams
 
 	bool failFirst;
 
+	bool intelligentBound;
+
 	SortType PMSortMethod;
 	SortType VMSortMethod;
 	bool initialPMFirst;

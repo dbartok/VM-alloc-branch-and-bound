@@ -137,6 +137,7 @@ void ConfigParser::processAllocator(std::ifstream& configFile)
 	tempParams.boundThreshold = boundThreshold;
 	tempParams.maxMigrations = maxMigrations;
 	tempParams.failFirst = failFirst;
+	tempParams.intelligentBound = intelligentBound;
 	tempParams.VMSortMethod = VMSortMethod;
 	tempParams.PMSortMethod = PMSortMethod;
 	tempParams.symmetryBreaking = symmetryBreaking;
@@ -165,6 +166,10 @@ void ConfigParser::processAllocatorParameter(const std::string& key, const std::
 	else if (key == "failFirst")
 	{
 		failFirst = stringToBool(value);
+	}
+	else if (key == "intelligentBound")
+	{
+		intelligentBound = stringToBool(value);
 	}
 	else if (key == "VMSortMethod")
 	{

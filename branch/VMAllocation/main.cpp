@@ -100,6 +100,7 @@ int main()
 	for (int i = 0; i < parser.getNumTests(); i++) // run for all instances
 	{
 		cout << "Instance " << i << ":" << endl;
+		log << "Instance " << i << ":" << endl;
 		AllocationProblem problem = generator->generate_ff();
 		vector<double> solutions;
 		for (unsigned i = 0; i < paramsList.size(); i++) // run current instance for all configurations

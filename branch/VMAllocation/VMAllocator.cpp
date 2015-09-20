@@ -30,43 +30,79 @@ along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 // preprocess the input problem
 void VMAllocator::preprocess()
 {
-	#ifdef VERBOSE_BASIC // logging parameter configuration name and problem data
-		m_log << "Parameter configuration: " << m_params.name << std::endl;
-		m_log << std::endl << "PMs:\t";
-		for (auto pm : m_problem.PMs)
+#ifdef VERBOSE_BASIC // logging parameter configuration name and problem data
+	m_log << "Parameter configuration: " << m_params.name << std::endl;
+	m_log << std::endl << "PMs:\t";
+	for (auto pm : m_problem.PMs)
+	{
+		m_log << "[";
+		for (int i = 0; i < m_dimension; i++)
 		{
-			m_log << "[";
-			for (int i = 0; i < m_dimension; i++)
-			{
-				m_log << pm.capacity[i];
-				if (i != m_dimension - 1)
-					m_log << " ";
-			}
-			
-			m_log << "] ";
+			m_log << pm.capacity[i];
+			if (i != m_dimension - 1)
+				m_log << " ";
 		}
-		m_log << std::endl << "VMs:\t";
-		for (auto vm : m_problem.VMs)
-		{
-			m_log << "[";
-			for (int i = 0; i < m_dimension; i++)
-			{
-				m_log << vm.demand[i];
-				if (i != m_dimension - 1)
-					m_log << " ";
-			}
 
-			m_log << "] ";
-		}
-		m_log << std::endl << "init:\t";
-		for (auto vm : m_problem.VMs)
+		m_log << "] ";
+	}
+	m_log << std::endl << "VMs:\t";
+	for (auto vm : m_problem.VMs)
+	{
+		m_log << "[";
+		for (int i = 0; i < m_dimension; i++)
 		{
-			m_log << vm.initial << " ";
+			m_log << vm.demand[i];
+			if (i != m_dimension - 1)
+				m_log << " ";
 		}
-		m_log << std::endl;
-	#endif
-	
 
+		m_log << "] ";
+	}
+	m_log << std::endl << "init:\t";
+	for (auto vm : m_problem.VMs)
+	{
+		m_log << vm.initial << " ";
+	}
+	m_log << std::endl;
+#endif
+
+	if (m_params.intelligentBound)
+	{
+		// compute number of initial VMs allocated to each PM, and also the number of PMs turned on in the initial assignment (required for bounding)
+		for (auto& vm : m_problem.VMs)
+		{
+			assert(vm.initial == m_problem.PMs[vm.initial].id); // PMs must be unsorted
+			vm.initialPM = &m_problem.PMs[vm.initial]; // saving initial PM
+
+			++(m_problem.PMs[vm.initial].numAdditionalVMs);
+		}
+		m_numAdditionalPMs = std::count_if(m_problem.PMs.cbegin(), m_problem.PMs.cend(), [](const PM& pm) {return pm.numAdditionalVMs > 0; });
+		m_maxNumVMsOnOnePM = std::max_element(m_problem.PMs.cbegin(), m_problem.PMs.cend(), 
+		[](const PM& pm1, const PM& pm2)
+		{
+			return pm1.numAdditionalVMs < pm2.numAdditionalVMs;
+		})->numAdditionalVMs;
+
+		// building map of additional VM counts
+		for (const auto& pm : m_problem.PMs)
+		{
+			++(m_additionalVMCounts[pm.numAdditionalVMs]);
+		}
+
+		#ifdef VERBOSE_ALG_STEPS
+			m_log << "\tMaximal number of VMs on one PM: " << m_maxNumVMsOnOnePM << std::endl;
+			m_log << "\tInitial additional PMs: " << m_numAdditionalPMs << std::endl;
+			m_log << "\tInitial additional Vms on each PM: ";
+			for (auto x : m_problem.PMs)
+				m_log << x.id << ":" << x.numAdditionalVMs << " ";
+			m_log << std::endl;
+			m_log << "\tInitial additional VM counts: ";
+			for (auto x : m_additionalVMCounts)
+				m_log << x << " ";
+			m_log << std::endl;
+		#endif
+	}
+	// sorting VMs
 	switch (m_params.VMSortMethod)
 	{
 	case NONE:
@@ -106,17 +142,64 @@ void VMAllocator::allocate(VM* VMHandled, PM* PMCandidate)
 {
 	assert(m_allocations[VMHandled->id] == -1); // we should only allocate unallocated VMs
 
-	//--Number of PMs ON--
+	//--Turning on a PM--
 	if (!(PMCandidate->isOn()))
 	{
 		m_numPMsOn++;
+
+		if (m_params.intelligentBound)
+		{
+			// this PM is turned on, cannot be emptied, remove it from the map
+			--(m_additionalVMCounts[PMCandidate->numAdditionalVMs]);
+
+			// decrease global counter if this PM was previously emptiable
+			if (PMCandidate->numAdditionalVMs > 0)
+			{
+				--m_numAdditionalPMs;
+			}
+		}
 	}
 
+	// reserve resources
 	m_allocations[VMHandled->id] = PMCandidate->id;
 	for (int i = 0; i < m_dimension; i++)
 		PMCandidate->resourcesFree[i] -= VMHandled->demand[i];
 
-	//--Number of migrations--
+	if (m_params.intelligentBound)
+	{
+		// handling initial PM of the allocated VM
+		// first we check if it is emptiable
+		if (!VMHandled->initialPM->isOn())
+		{
+			int& numVMs = VMHandled->initialPM->numAdditionalVMs; // saving number of initial VMs remaining on this PM
+
+			// modifying the map: there is now one less initial VM on this PM
+			--(m_additionalVMCounts[numVMs]);
+			++(m_additionalVMCounts[numVMs - 1]);
+
+			if (numVMs == 1) // this is the last additional VM on the PM, the PM becomes non-emptiable (because it is going to be empty)
+			{
+				--m_numAdditionalPMs;
+			}
+
+			// we also have to decrease the counter for the PM
+			--(numVMs);
+		}
+
+		#ifdef VERBOSE_ALG_STEPS
+			m_log << "\tCurrent additional PMs: " << m_numAdditionalPMs << std::endl;
+			m_log << "\tCurrent additional VMs on each PM: ";
+			for (auto x : m_problem.PMs)
+				m_log << x.id << ":" << x.numAdditionalVMs << " ";
+			m_log << std::endl;
+			m_log << "\tCurrent additional VM counts: ";
+			for (auto x : m_additionalVMCounts)
+				m_log << x << " ";
+			m_log << std::endl;
+		#endif
+	}
+
+	//--Migrating a VM--
 	if (VMHandled->initial != -1 && PMCandidate->id != VMHandled->initial)
 	{
 		m_numMigrations++;
@@ -156,21 +239,71 @@ void VMAllocator::deAllocate(VM* VMHandled)
 
 	PM* PMCandidate = &m_problem.PMs[PMCandidateIndex];
 
+	if (m_params.intelligentBound)
+	{
+		// handling initial PM of the allocated VM
+		// first we check if it is emptiable
+		if (!VMHandled->initialPM->isOn())
+		{
+			int& numVMs = VMHandled->initialPM->numAdditionalVMs;
+
+			// modifying the map: there is now one more initial VM on this PM
+			--(m_additionalVMCounts[numVMs]);
+			++(m_additionalVMCounts[numVMs + 1]);
+
+			if (numVMs == 0) // this is going to be the first additional VM on the PM, the PM becomes emptiable (previously it was be empty)
+			{
+				++m_numAdditionalPMs;
+			}
+
+			// we also have to increase the counter for the PM
+			++(numVMs);
+		}
+	}
+
+	// free resources
 	m_allocations[VMHandled->id] = -1;
 	for (int i = 0; i < m_dimension; i++)
 		PMCandidate->resourcesFree[i] += VMHandled->demand[i];
 
-	//--Number of PMs ON--
+	//--Turning on a PM--
 	if (!(PMCandidate->isOn()))
 	{
 		m_numPMsOn--;
+
+		if (m_params.intelligentBound)
+		{
+			// this PM is turned off, it can be emptied, add it to the map
+			++(m_additionalVMCounts[PMCandidate->numAdditionalVMs]);
+
+			// increase global counter if this PM is now emptiable (it has initial VMs on it)
+			if (PMCandidate->numAdditionalVMs > 0)
+			{
+				++m_numAdditionalPMs;
+			}
+		}
+	}
+	if (m_params.intelligentBound)
+	{
+		#ifdef VERBOSE_ALG_STEPS
+			m_log << "\tCurrent additional PMs: " << m_numAdditionalPMs << std::endl;
+			m_log << "\tCurrent additional VMs on each PM: ";
+			for (auto x : m_problem.PMs)
+				m_log << x.id << ":" << x.numAdditionalVMs << " ";
+			m_log << std::endl;
+			m_log << "\tCurrent additional VM counts: ";
+			for (auto x : m_additionalVMCounts)
+				m_log << x << " ";
+			m_log << std::endl;
+		#endif
 	}
 
-	//--Number of migrations--
+	//--Migrating a VM--
 	if (VMHandled->initial != -1 && PMCandidate->id != VMHandled->initial)
 	{
 		m_numMigrations--;
 	}
+	
 		
 	Change change = m_changeStack.top();
 	m_changeStack.pop();
@@ -377,8 +510,27 @@ void VMAllocator::setNextPMCandidate(VM* VMHandled)
 	}
 }
 
+double VMAllocator::computeMinimalExtraCost()
+{
+	int remainingMigrations = m_params.maxMigrations - m_numMigrations;
+
+	int minimalExtraCost = m_numAdditionalPMs * COEFF_NR_OF_ACTIVE_HOSTS;
+	int migrationsDone = 0;
+
+	for (int numVMs = 1; numVMs <= m_maxNumVMsOnOnePM; ++numVMs)
+	{
+		if (numVMs >= COEFF_NR_OF_ACTIVE_HOSTS / COEFF_NR_OF_MIGRATIONS)
+			break;
+		int numPMsEmptied = std::min(m_additionalVMCounts[numVMs], (remainingMigrations - migrationsDone) / numVMs);
+		migrationsDone += numPMsEmptied * numVMs;
+		minimalExtraCost -= (numPMsEmptied * COEFF_NR_OF_ACTIVE_HOSTS - numPMsEmptied * numVMs * COEFF_NR_OF_MIGRATIONS);
+	}
+
+	return minimalExtraCost;
+}
+
 VMAllocator::VMAllocator(AllocationProblem pr, AllocatorParams pa, std::ofstream& l)
-	:m_problem(pr), m_params(pa), m_log(l)
+	:m_problem(pr), m_params(pa), m_log(l), m_additionalVMCounts(m_problem.VMs.size()+1, 0)
 {
 	m_numVMs = m_problem.VMs.size();
 	m_numPMs = m_problem.PMs.size();
@@ -446,7 +598,11 @@ void VMAllocator::solveIterative()
 			#endif
 			deAllocate(VMHandled); // undo allocation
 			#ifdef VERBOSE_ALG_STEPS
-				m_log << "Deallocated VM " << VMHandled->id << "." << std::endl;
+				m_log << "Deallocated VM " << VMHandled->id << ". ";
+				m_log << "Current allocation: ";
+				for (auto x : m_allocations)
+					m_log << x << " ";
+				m_log << std::endl;
 			#endif
 			continue;
 		}
@@ -467,6 +623,10 @@ void VMAllocator::solveIterative()
 			deAllocate(VMHandled);
 			#ifdef VERBOSE_ALG_STEPS
 				m_log << "\tToo many migrations. Deallocated VM " << VMHandled->id << "." << std::endl;
+				m_log << "Current allocation: ";
+				for (auto x : m_allocations)
+					m_log << x << " ";
+				m_log << std::endl;
 			#endif
 			continue;
 		}
@@ -476,11 +636,26 @@ void VMAllocator::solveIterative()
 		m_log << "numPMsOn = " << m_numPMsOn << ", numMigrations = " << m_numMigrations <<", cost is: "<< cost << ". " << std::endl;
 		#endif
 
-		if (cost >= m_bestSoFar * m_params.boundThreshold) // bound
+		double minimalTotalCost = cost;
+
+		if (m_params.intelligentBound)
+		{
+			double extraCost = computeMinimalExtraCost();
+			minimalTotalCost += extraCost;
+			#ifdef VERBOSE_ALG_STEPS
+			m_log << "Computed minimal extra cost = " << extraCost << ", minimal total cost = " << minimalTotalCost << std::endl;
+			#endif
+		}
+
+		if (minimalTotalCost >= m_bestSoFar * m_params.boundThreshold) // bound
 		{
 			deAllocate(VMHandled);
 			#ifdef VERBOSE_ALG_STEPS
 				m_log << "\tBound. Deallocated VM " << VMHandled->id << "." << std::endl;
+				m_log << "Current allocation: ";
+				for (auto x : m_allocations)
+					m_log << x << " ";
+				m_log << std::endl;
 			#endif
 			continue;
 		}
@@ -498,6 +673,10 @@ void VMAllocator::solveIterative()
 			deAllocate(VMHandled);
 			#ifdef VERBOSE_ALG_STEPS
 				m_log << "\tAlready at the last VM. Deallocated VM " << VMHandled->id << "." << std::endl;
+				m_log << "Current allocation: ";
+				for (auto x : m_allocations)
+					m_log << x << " ";
+				m_log << std::endl;
 			#endif
 		}
 		else // move down in the tree

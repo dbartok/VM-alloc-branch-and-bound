@@ -103,6 +103,11 @@ bool SumPMComparator(PM* first, PM* second)
 	return firstSum > secondSum;
 }
 
+PM::PM()
+{
+	numAdditionalVMs = 0;
+}
+
 bool PM::isOn()
 {
 	for (std::size_t i = 0; i < resourcesFree.size(); i++)

@@ -25,10 +25,12 @@ along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 struct PM
 {
 	int id;
+	int numAdditionalVMs; // number of additional VMs allocated on this PM, if we now leave all VMs on their initial PM
 	std::vector<int> capacity;
 	std::vector<int> resourcesFree;
 
 	bool isOn();
+	PM();
 };
 
 bool operator==(const PM& first, const PM& second);

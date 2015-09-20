@@ -22,17 +22,17 @@ DONE:
     x Iterative cost computation
     x Other sorting methods for VMs 
     x VMs with no initial PM (allocating these never cause migrations)
+    x Generator should create more realistic problems
+    x Bound: determine a minimal cost for the unallocated VMs (lower bound for the complete allocation)
+    x ILP comparison
 
 TODO:
     Anti-affinities (some VMs cannot be placed on the same PM)
     Initialize "best cost so far" with a heuristic
-    Generator should create more realistic problems
 
 Advanced TODO:
     Give some allocation even when the problem is unsolvable (+different priorities for VMs)
-    Bound: determine a minimal cost for the unallocated VMs (lower bound for the complete allocation)
     CloudSim integration / C++ simulation
-    ILP comparison
     Restarts
     Best First Search
     Learning

@@ -47,6 +47,7 @@ private:
 	double boundThreshold;
 	int maxMigrations;
 	bool failFirst;
+	bool intelligentBound;
 	SortType VMSortMethod;
 	SortType PMSortMethod;
 	bool symmetryBreaking;
