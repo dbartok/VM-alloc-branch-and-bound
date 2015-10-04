@@ -28,14 +28,22 @@ along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 
 class ConfigParser
 {
+public:
+	struct Steps
+	{
+		int from;
+		int to;
+		int step;
+	};
 private:
 	std::string m_configFilePath;
 
+	bool showDetailedCost;
 	int numTests;
 
 	int dimensions;
-	int VMs;
-	int PMs;
+	Steps VMs;
+	Steps PMs;
 	int VMmin;
 	int VMmax;
 	int PMmin;
@@ -45,7 +53,7 @@ private:
 	std::string name;
 	double timeout;
 	double boundThreshold;
-	int maxMigrations;
+	int maxMigrationsRatio;
 	bool failFirst;
 	bool intelligentBound;
 	SortType VMSortMethod;
@@ -67,6 +75,9 @@ public:
 	int getNumTests();
 	std::unique_ptr<ProblemGenerator>&& getGenerator();
 	std::vector<AllocatorParams> getParamsList();
+	Steps getVMs();
+	Steps getPMs();
+	bool getShowDetailedCost();
 };
 
 #endif

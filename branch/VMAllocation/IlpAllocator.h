@@ -25,6 +25,8 @@ along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 #include "AllocatorParams.h"
 #include "global_params.h"
 
+#define LPSOLVEPATH "lp_solve_5.5.2.0_exe\\lp_solve"
+
 typedef enum {GUROBI, LPSOLVE} solver_type;
 
 class IlpAllocator

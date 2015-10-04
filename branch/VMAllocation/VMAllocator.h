@@ -52,9 +52,12 @@ class VMAllocator
 
 	std::vector<int> m_allocations; // current allocations
 	std::vector<int> m_bestAllocation; // best allocation so far
+	int m_numMaxMigrations;
 	int m_numMigrations;
 	int m_numPMsOn;
 	double m_bestSoFar; // best cost so far
+	int m_bestSoFarNumMigrations;
+	int m_bestSoFarNumPMsOn;
 
 	std::stack<VM*> m_VMStack; // stack of allocated VMs
 	std::stack<Change> m_changeStack; // stack of changes during the algorithm
@@ -86,7 +89,10 @@ class VMAllocator
 public:
 	VMAllocator(AllocationProblem pr, AllocatorParams pa, std::ofstream& l);
 	void solveIterative();
+	double computeInitialLowerBound();
 	double getOptimum();
+	int getActiveHosts();
+	int getMigrations();
 
 };
 

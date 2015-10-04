@@ -40,8 +40,9 @@ private:
 
 	static bool randomInitialized;
 public:
-	ProblemGenerator(int dimension, int nvms, int npms, int minrd, int maxrd, int minrs, int maxrs, int types);
+	ProblemGenerator(int dimension, int minrd, int maxrd, int minrs, int maxrs, int types);
 	int randomIntBetween(int min, int max);
+	void setNumVMsNumPMs(int nVMs, int nPMs);
 	AllocationProblem generate();
 	AllocationProblem generate_ff();
 	AllocationProblem testFromFile(std::string path);

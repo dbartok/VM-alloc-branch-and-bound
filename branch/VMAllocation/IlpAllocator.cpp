@@ -121,7 +121,7 @@ void IlpAllocator::create_lp(char *filename)
 		if(j>0) ilpfile << " + ";
 		ilpfile << "Migr_" << j;
 	}
-	ilpfile << " <= " << m_params.maxMigrations;
+	ilpfile << " <= " << m_numPMs/m_params.maxMigrationsRatio;
 	if(m_solver==GUROBI)
 		ilpfile << endl;
 	if(m_solver==LPSOLVE)
@@ -172,12 +172,12 @@ void IlpAllocator::solveIterative()
 	if(m_solver==GUROBI)
 	{
 		create_lp("ilp_gurobi.lp");
-		command << "gurobi_cl ResultFile=sol_gurobi.sol TimeLimit=" << m_params.timeout << " ilp_gurobi.lp";
+		command << "gurobi_cl Threads=1 ResultFile=sol_gurobi.sol TimeLimit=" << m_params.timeout << " ilp_gurobi.lp";
 	}
 	if(m_solver==LPSOLVE)
 	{
 		create_lp("ilp_lpsolve.lp");
-		command << "lp_solve -timeout " << (int)round(m_params.timeout) << " ilp_lpsolve.lp > sol_lpsolve.sol";
+		command << LPSOLVEPATH << " -timeout " << (int)round(m_params.timeout) << " ilp_lpsolve.lp > sol_lpsolve.sol";
 	}
 	system(command.str().c_str());
 }
@@ -190,7 +190,14 @@ double IlpAllocator::getOptimum()
 	{
 		ifstream solfile("sol_gurobi.sol");
 		std::getline(solfile, line);
-		result=atof(line.substr(20).c_str());
+		try
+		{
+			result = atof(line.substr(20).c_str());
+		}
+		catch (std::out_of_range&)
+		{
+			// no solution given
+		}
 //		solfile >> "# Objective value =" >> result;
 		solfile.close();
 	}

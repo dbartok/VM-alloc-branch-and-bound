@@ -212,7 +212,7 @@ void VMAllocator::allocate(VM* VMHandled, PM* PMCandidate)
 	// updating available PMs lists
 	for (int vm = 0; vm < m_numVMs; vm++)
 	{
-		if (m_allocations[vm] != -1) // VM already allocated, no need to update its available PM list
+		if (m_allocations[m_problem.VMs[vm].id] != -1) // VM already allocated, no need to update its available PM list
 		{
 			continue;
 		}
@@ -512,7 +512,7 @@ void VMAllocator::setNextPMCandidate(VM* VMHandled)
 
 double VMAllocator::computeMinimalExtraCost()
 {
-	int remainingMigrations = m_params.maxMigrations - m_numMigrations;
+	int remainingMigrations = m_numMaxMigrations - m_numMigrations;
 
 	int minimalExtraCost = m_numAdditionalPMs * COEFF_NR_OF_ACTIVE_HOSTS;
 	int migrationsDone = 0;
@@ -536,10 +536,15 @@ VMAllocator::VMAllocator(AllocationProblem pr, AllocatorParams pa, std::ofstream
 	m_numPMs = m_problem.PMs.size();
 	m_dimension = m_problem.VMs[0].demand.size(); // only works if all VMs have the same number of dimensions
 
+	// computing available migrations
+	m_numMaxMigrations = m_numPMs / m_params.maxMigrationsRatio;
+
 	// at the start there are no allocations
 	m_numMigrations = 0; 
 	m_numPMsOn = 0;
 	m_bestSoFar = INT_MAX;
+	m_bestSoFarNumMigrations = INT_MAX;
+	m_bestSoFarNumPMsOn = INT_MAX;
 
 	for (int i = 0; i < m_numVMs; i++)
 		m_allocations.push_back(-1); // no allocations at the start
@@ -618,7 +623,7 @@ void VMAllocator::solveIterative()
 		#endif
 		assert(isAllocationValid());
 
-		if (m_numMigrations > m_params.maxMigrations) // ran out of migrations
+		if (m_numMigrations > m_numMaxMigrations) // ran out of migrations
 		{
 			deAllocate(VMHandled);
 			#ifdef VERBOSE_ALG_STEPS
@@ -664,6 +669,8 @@ void VMAllocator::solveIterative()
 		{
 			m_bestAllocation = m_allocations;
 			m_bestSoFar = cost;
+			m_bestSoFarNumPMsOn = m_numPMsOn;
+			m_bestSoFarNumMigrations = m_numMigrations;
 			#ifdef VERBOSE_COST_CHANGE
 				m_log << m_timer.getElapsedTime() << ", " << cost << std::endl;
 			#endif
@@ -704,4 +711,22 @@ double VMAllocator::getOptimum()
 	#endif
 
 	return m_bestSoFar;
+}
+
+// computes an initial lower bound for the optimum
+// must be called before the start of the algorithm, but after preprocessing
+double VMAllocator::computeInitialLowerBound()
+{
+	return computeMinimalExtraCost();
+}
+
+// get cost components
+int VMAllocator::getActiveHosts()
+{
+	return m_bestSoFarNumPMsOn;
+}
+
+int VMAllocator::getMigrations()
+{
+	return m_bestSoFarNumMigrations;
 }

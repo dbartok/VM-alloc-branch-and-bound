@@ -47,6 +47,8 @@ using std::vector;
 using std::ofstream;
 using std::endl;
 
+//#define ILP_AVAILABLE
+
 int main()
 {
 	std::string timeString = currentDateTime();
@@ -75,76 +77,136 @@ int main()
 	#else
 		ofstream output("logs/Runtimes_" + timeString + ".csv");
 	#endif
+
+	//problem data
+	output << "Input problem";
+	output << "; ";
+
 	for (unsigned i = 0; i < paramsList.size(); i++) // columns for runtimes
 	{
 		output << paramsList[i].name;
 		output << "; ";
 	}
+
+	// column for lower bound of optimum
+	output << "Minimal optimum";
+	output << "; ";
+
+	bool showDetailedCost = parser.getShowDetailedCost();
 	for (unsigned i = 0; i < paramsList.size(); i++) // columns for costs
 	{
 		output << paramsList[i].name + ": cost";
-//		if (i != paramsList.size() - 1)
-//		{
+		output << "; ";
+
+		if (showDetailedCost)
+		{
+			output << paramsList[i].name + ": PMs on";
 			output << "; ";
-//		}
+
+			output << paramsList[i].name + ": Migrations";
+			output << "; ";
+		}
 	}
 
-#ifndef WIN32
-	output << "Gurobi cost; Lpsolve cost";
-#endif
+	#ifdef ILP_AVAILABLE
+		output << "Gurobi: cost; Lpsolve: cost";
+	#endif
 	output << endl;
 
-	// run tests
-	cout << "Running " << parser.getNumTests() << " test(s) with " << paramsList.size() << " parameter setups each..." << endl;
-
-	for (int i = 0; i < parser.getNumTests(); i++) // run for all instances
+	ConfigParser::Steps vmSteps = parser.getVMs();
+	ConfigParser::Steps pmSteps = parser.getPMs();
+	int numVMs = vmSteps.from;
+	int numPMs = pmSteps.from;
+	while (numVMs <= vmSteps.to && numPMs <= pmSteps.to)
 	{
-		cout << "Instance " << i << ":" << endl;
-		log << "Instance " << i << ":" << endl;
-		AllocationProblem problem = generator->generate_ff();
-		vector<double> solutions;
-		for (unsigned i = 0; i < paramsList.size(); i++) // run current instance for all configurations
+		// run tests
+		cout << "VMs: " << numVMs << " PMs: " << numPMs << ", Running " << parser.getNumTests() << " test(s) with " << paramsList.size() << " parameter setups each..." << endl;
+
+		generator->setNumVMsNumPMs(numVMs, numPMs); // finalizing generator
+		for (int i = 0; i < parser.getNumTests(); i++) // run for all instances
 		{
-			cout << "\t" << paramsList[i].name << "...";
-			t.start();
-			VMAllocator VMA(problem, paramsList[i], log);
-			VMA.solveIterative();
-			double elapsed = t.getElapsedTime();
-			cout << " DONE!" << endl;
-			output << elapsed;
+			cout << "Instance " << i << ":" << endl;
+			#ifdef VERBOSE_BASIC	
+				log << "Instance " << i << ":" << endl;
+			#endif
+				AllocationProblem problem = generator->generate_ff();
+
+			vector<double> solutions; // costs
+			vector<int> activeHosts;
+			vector<int> migrations;
+
+			// first allocator determines lower bound for the optimum
+			double initialLowerBound;
+			{
+				const std::string nameSaved(paramsList[0].name);
+				paramsList[0].name = "LB for optimum"; // using a dummy name instead of the real one
+				VMAllocator VMA(problem, paramsList[0], log);
+				initialLowerBound = VMA.computeInitialLowerBound();
+				paramsList[0].name = nameSaved;
+			}
+
+			output << numVMs << " VMs, " << numPMs << " PMs";
 			output << "; ";
-			double opt = VMA.getOptimum();
-			solutions.push_back(opt);
-#ifdef VERBOSE_BASIC			
-			log << "Solution = " << opt << endl;
-			log << "==============================" << endl;
-#endif
-		}
-
-		for (unsigned i = 0; i < paramsList.size(); i++)
-		{
-			output << solutions[i];
-//			if (i != paramsList.size() - 1)
-//			{
+			for (unsigned i = 0; i < paramsList.size(); i++) // run current instance for all configurations
+			{
+				cout << "\t" << paramsList[i].name << "...";
+				t.start();
+				VMAllocator VMA(problem, paramsList[i], log);
+				VMA.solveIterative();
+				double elapsed = t.getElapsedTime();
+				cout << " DONE!" << endl;
+				output << elapsed;
 				output << "; ";
-//			}
+				double opt = VMA.getOptimum();
+				solutions.push_back(opt);
+				if (showDetailedCost)
+				{
+					activeHosts.push_back(VMA.getActiveHosts());
+					migrations.push_back(VMA.getMigrations());
+				}
+				#ifdef VERBOSE_BASIC			
+					log << "Solution = " << opt << endl;
+					log << "==============================" << endl;
+				#endif
+			}
+
+			output << initialLowerBound;
+			output << "; ";
+
+			for (unsigned i = 0; i < paramsList.size(); i++)
+			{
+				output << solutions[i];
+				output << "; ";
+
+				if (showDetailedCost) 
+				{
+					output << activeHosts[i];
+					output << "; ";
+
+					output << migrations[i];
+					output << "; ";
+				}
+			}
+
+			#ifdef ILP_AVAILABLE
+				IlpAllocator IA1(problem, paramsList[0], log, GUROBI);
+				IA1.solveIterative();
+				double opt = IA1.getOptimum();
+				output << opt << "; ";
+				IlpAllocator IA2(problem, paramsList[0], log, LPSOLVE);
+				IA2.solveIterative();
+				opt = IA2.getOptimum();
+				output << opt;
+			#endif
+			output << endl;
 		}
 
-#ifndef WIN32
-		IlpAllocator IA1(problem, paramsList[0], log, GUROBI);
-		IA1.solveIterative();
-		double opt = IA1.getOptimum();
-		output << opt << "; ";
-		IlpAllocator IA2(problem, paramsList[0], log, LPSOLVE);
-		IA2.solveIterative();
-		opt = IA2.getOptimum();
-		output << opt;
-#endif
 		output << endl;
+		numVMs += vmSteps.step;
+		numPMs += pmSteps.step;
 	}
 
 	output.close();
 	log.close();
 	cout << "(Finished.)" << endl;
-	//getchar();
 }

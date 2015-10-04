@@ -28,8 +28,8 @@ along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 
 bool ProblemGenerator::randomInitialized = false;
 
-ProblemGenerator::ProblemGenerator(int dim, int nvms, int npms, int minrd, int maxrd, int minrs, int maxrs, int types)
-	:dimension(dim), numVMs(nvms), numPMs(npms), minResDemand(minrd), maxResDemand(maxrd), minResSupply(minrs), maxResSupply(maxrs), numPMTypes(types)
+ProblemGenerator::ProblemGenerator(int dim, int minrd, int maxrd, int minrs, int maxrs, int types)
+	:dimension(dim), minResDemand(minrd), maxResDemand(maxrd), minResSupply(minrs), maxResSupply(maxrs), numPMTypes(types)
 {
 	if (!randomInitialized) // only initialize random generator once
 	{
@@ -42,6 +42,12 @@ int ProblemGenerator::randomIntBetween(int min, int max)
 {
 	int extra = rand() % (max - min + 1); // between 0 and max-min
 	return min + extra; // between min and max
+}
+
+void ProblemGenerator::setNumVMsNumPMs(int nVMs, int nPMs)
+{
+	numVMs = nVMs;
+	numPMs = nPMs;
 }
 
 AllocationProblem ProblemGenerator::generate()

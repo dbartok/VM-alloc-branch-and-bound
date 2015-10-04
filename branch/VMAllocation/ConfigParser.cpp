@@ -24,6 +24,21 @@ std::vector<AllocatorParams> ConfigParser::getParamsList()
 	return m_paramsList;
 }
 
+ConfigParser::Steps ConfigParser::getVMs()
+{
+	return VMs;
+}
+
+ConfigParser::Steps ConfigParser::getPMs()
+{
+	return PMs;
+}
+
+bool ConfigParser::getShowDetailedCost()
+{
+	return showDetailedCost;
+}
+
 void ConfigParser::parse()
 {
 	std::ifstream configFile(m_configFilePath);
@@ -46,8 +61,6 @@ void ConfigParser::parse()
 
 	m_generator = std::make_unique<ProblemGenerator>
 		(	  dimensions
-			, VMs
-			, PMs
 			, VMmin
 			, VMmax
 			, PMmin
@@ -72,7 +85,11 @@ bool ConfigParser::getKeyValue(const std::string& line, std::string& key, std::s
 
 void ConfigParser::processGeneralParameter(const std::string& key, const std::string& value)
 {
-	if (key == "numTests")
+	if (key == "showDetailedCost")
+	{
+		showDetailedCost = stringToBool(value);
+	}
+	else if (key == "numTests")
 	{
 		numTests = std::stoi(value);
 	}
@@ -80,13 +97,29 @@ void ConfigParser::processGeneralParameter(const std::string& key, const std::st
 	{
 		dimensions = std::stoi(value);
 	}
-	else if (key == "VMs")
+	else if (key == "VMsFrom")
 	{
-		VMs = std::stoi(value);
+		VMs.from = std::stoi(value);
 	}
-	else if (key == "PMs")
+	else if (key == "VMsTo")
 	{
-		PMs = std::stoi(value);
+		VMs.to = std::stoi(value);
+	}
+	else if (key == "VMsStep")
+	{
+		VMs.step = std::stoi(value);
+	}
+	else if (key == "PMsFrom")
+	{
+		PMs.from = std::stoi(value);
+	}
+	else if (key == "PMsTo")
+	{
+		PMs.to = std::stoi(value);
+	}
+	else if (key == "PMsStep")
+	{
+		PMs.step = std::stoi(value);
 	}
 	else if (key == "VMmin")
 	{
@@ -135,7 +168,7 @@ void ConfigParser::processAllocator(std::ifstream& configFile)
 	tempParams.name = name;
 	tempParams.timeout = timeout;
 	tempParams.boundThreshold = boundThreshold;
-	tempParams.maxMigrations = maxMigrations;
+	tempParams.maxMigrationsRatio = maxMigrationsRatio;
 	tempParams.failFirst = failFirst;
 	tempParams.intelligentBound = intelligentBound;
 	tempParams.VMSortMethod = VMSortMethod;
@@ -159,9 +192,9 @@ void ConfigParser::processAllocatorParameter(const std::string& key, const std::
 	{
 		boundThreshold = std::stod(value);
 	}
-	else if (key == "maxMigrations")
+	else if (key == "maxMigrationsRatio")
 	{
-		maxMigrations = std::stoi(value);
+		maxMigrationsRatio = std::stoi(value);
 	}
 	else if (key == "failFirst")
 	{

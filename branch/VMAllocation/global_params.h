@@ -21,7 +21,7 @@ along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 #define GLOBAL_PARAMS_H
 
 
-#define COEFF_NR_OF_ACTIVE_HOSTS 2
+#define COEFF_NR_OF_ACTIVE_HOSTS 10
 #define COEFF_NR_OF_MIGRATIONS 1
 
 
