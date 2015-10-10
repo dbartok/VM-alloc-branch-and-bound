@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="VMAllocator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ProblemGenerator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -33,10 +30,13 @@
     <ClCompile Include="PM.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="IlpAllocator.cpp">
+    <ClCompile Include="ConfigParser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ConfigParser.cpp">
+    <ClCompile Include="BnBAllocator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ILPAllocator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -68,13 +68,19 @@
     <ClInclude Include="Utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="global_params.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IlpAllocator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ConfigParser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BnBParams.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ILPParams.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BnBAllocator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ILPAllocator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

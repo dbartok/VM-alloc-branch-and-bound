@@ -21,20 +21,21 @@ along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 #define ILPALLOCATOR_H
 
 #include <fstream>
+#include <memory>
+
+#include "VMAllocator.h"
 #include "AllocationProblem.h"
 #include "AllocatorParams.h"
-#include "global_params.h"
+#include "ILPParams.h"
 
 #define LPSOLVEPATH "lp_solve_5.5.2.0_exe\\lp_solve"
 
-typedef enum {GUROBI, LPSOLVE} solver_type;
-
-class IlpAllocator
+class ILPAllocator : public VMAllocator
 {
 	AllocationProblem m_problem; // the allocation problem
-	AllocatorParams m_params; // algorithm parameters
+	ILPParams m_params; // algorithm parameters
 	std::ofstream& m_log; // output log file
-	solver_type m_solver;
+	SolverType m_solverType;
 
 	int m_dimension; // dimension of resources
 	int m_numVMs; // number of Virtual Machines
@@ -43,9 +44,9 @@ class IlpAllocator
 	void create_lp(char *filename);
 
 public:
-	IlpAllocator(AllocationProblem pr, AllocatorParams pa, std::ofstream& l, solver_type solver);
-	void solveIterative();
-	double getOptimum();
+	ILPAllocator(AllocationProblem pr, std::shared_ptr<AllocatorParams> pa, std::ofstream& l);
+	void solveIterative() final override;
+	double getOptimum() final override;
 };
 
 #endif /* ILPALLOCATOR_H */

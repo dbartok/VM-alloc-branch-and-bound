@@ -17,64 +17,47 @@ You should have received a copy of the GNU General Public License
 along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PARAMS_H
-#define PARAMS_H
+#ifndef ALLOCATORPARAMS_H
+#define ALLOCATORPARAMS_H
 
-#include <vector>
 #include <string>
 #include <iostream>
 
-enum SortType
+enum AllocatorType
 {
-	NONE,
-	LEXICOGRAPHIC,
-	MAXIMUM,
-	SUM
+	BnB,
+	ILP
 };
 
 struct AllocatorParams
 {
+	AllocatorType allocatorType;
 	std::string name;
-
-	bool failFirst;
-
-	bool intelligentBound;
-
-	SortType PMSortMethod;
-	SortType VMSortMethod;
-	bool initialPMFirst;
-	bool symmetryBreaking; // causes the loss of optimality
-
 	double timeout; // timeout in seconds
-	double boundThreshold; // bound also when (cost >= bestSoFar * boundThreshold), makes sense when between 0 and 1
-
 	int maxMigrationsRatio;
+
+	// force class to be polymorphic
+	virtual void dummy()
+	{
+
+	}
 };
 
-static SortType stringToSortType(const std::string& toConvert)
+static AllocatorType stringToAllocatorType(const std::string& toConvert)
 {
-	if (toConvert == "NONE")
+	if (toConvert == "BnB")
 	{
-		return NONE;
+		return BnB;
 	}
-	else if (toConvert == "LEXICOGRAPHIC")
+	else if (toConvert == "ILP")
 	{
-		return LEXICOGRAPHIC;
-	}
-	else if (toConvert == "MAXIMUM")
-	{
-		return MAXIMUM;
-	}
-	else if (toConvert == "SUM")
-	{
-		return SUM;
+		return ILP;
 	}
 	else
 	{
-		std::cout << "WARNING: Invalid Sort Type. Defaulting to NONE." << std::endl;
-		return NONE;
+		std::cout << "WARNING: Invalid Allocator Type. Defaulting to BnB." << std::endl;
+		return BnB;
 	}
 }
-
 
 #endif

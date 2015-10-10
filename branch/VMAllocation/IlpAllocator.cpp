@@ -20,28 +20,37 @@ along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 #include  <stdlib.h>
 #include  <math.h>
 #include  <sstream>
-#include "IlpAllocator.h"
+
+#include  "ILPAllocator.h"
 
 using std::ofstream;
 using std::ifstream;
 using std::endl;
 
-IlpAllocator::IlpAllocator(AllocationProblem pr, AllocatorParams pa, std::ofstream& l, solver_type solver)
-	:m_problem(pr), m_params(pa), m_log(l), m_solver(solver)
+ILPAllocator::ILPAllocator(AllocationProblem pr, std::shared_ptr<AllocatorParams> pa, std::ofstream& l)
+	:m_problem(pr), m_log(l)
 {
+	std::shared_ptr<ILPParams> params = std::dynamic_pointer_cast<ILPParams>(pa);
+
+	if (!params)
+		std::cout << "Error: invalid parameters type for ILPAllocator." << std::endl;
+
+	m_params = *params;
+
+	m_solverType = m_params.solverType;
 	m_numVMs = m_problem.VMs.size();
 	m_numPMs = m_problem.PMs.size();
 	m_dimension = m_problem.VMs[0].demand.size(); // only works if all VMs have the same number of dimensions
 }
 
-void IlpAllocator::create_lp(char *filename)
+void ILPAllocator::create_lp(char *filename)
 {
 	ofstream ilpfile(filename);
 
 	//Objective function
-	if(m_solver==GUROBI)
+	if(m_solverType==GUROBI)
 		ilpfile << "Minimize" << endl;
-	if(m_solver==LPSOLVE)
+	if(m_solverType==LPSOLVE)
 		ilpfile << "min: ";
 	for(int i=0;i<m_numPMs;i++)
 	{
@@ -53,9 +62,9 @@ void IlpAllocator::create_lp(char *filename)
 		ilpfile << " + " << COEFF_NR_OF_MIGRATIONS << " Migr_" << i;
 	}
 
-	if(m_solver==GUROBI)
+	if(m_solverType==GUROBI)
 		ilpfile << endl << endl << "Subject To" << endl;
-	if(m_solver==LPSOLVE)
+	if(m_solverType==LPSOLVE)
 		ilpfile << ";" << endl << endl;
 
 	//Each VM must be allocated to exactly one PM
@@ -66,9 +75,9 @@ void IlpAllocator::create_lp(char *filename)
 			if(i>0) ilpfile << " + ";
 			ilpfile << "Alloc_" << j << "_" << i;
 		}
-		if(m_solver==GUROBI)
+		if(m_solverType==GUROBI)
 			ilpfile << " = 1" << endl;
-		if(m_solver==LPSOLVE)
+		if(m_solverType==LPSOLVE)
 			ilpfile << " = 1;" << endl;
 	}
 
@@ -78,9 +87,9 @@ void IlpAllocator::create_lp(char *filename)
 		for(int i=0;i<m_numPMs;i++)
 		{
 			ilpfile << "Alloc_" << j << "_" << i << " - Active_" << i << " <= 0";
-			if(m_solver==GUROBI)
+			if(m_solverType==GUROBI)
 				ilpfile << endl;
-			if(m_solver==LPSOLVE)
+			if(m_solverType==LPSOLVE)
 				ilpfile << ";" << endl;
 		}
 	}
@@ -99,9 +108,9 @@ void IlpAllocator::create_lp(char *filename)
 				ilpfile << vmsize << " Alloc_" << j << "_" << i;
 			}
 			ilpfile << " <= " << pmsize;
-			if(m_solver==GUROBI)
+			if(m_solverType==GUROBI)
 				ilpfile << endl;
-			if(m_solver==LPSOLVE)
+			if(m_solverType==LPSOLVE)
 				ilpfile << ";" << endl;
 		}
 	}
@@ -111,9 +120,9 @@ void IlpAllocator::create_lp(char *filename)
 	{
 		int initial=m_problem.VMs[j].initial;
 		ilpfile << "Alloc_" << j << "_" << initial << " + Migr_" << j << " = 1";
-		if(m_solver==GUROBI)
+		if(m_solverType==GUROBI)
 			ilpfile << endl;
-		if(m_solver==LPSOLVE)
+		if(m_solverType==LPSOLVE)
 			ilpfile << ";" << endl;
 	}
 	for(int j=0;j<m_numVMs;j++)
@@ -122,30 +131,30 @@ void IlpAllocator::create_lp(char *filename)
 		ilpfile << "Migr_" << j;
 	}
 	ilpfile << " <= " << m_numPMs/m_params.maxMigrationsRatio;
-	if(m_solver==GUROBI)
+	if(m_solverType==GUROBI)
 		ilpfile << endl;
-	if(m_solver==LPSOLVE)
+	if(m_solverType==LPSOLVE)
 		ilpfile << ";" << endl;
 
 	//Variables
-	if(m_solver==GUROBI)
+	if(m_solverType==GUROBI)
 		ilpfile << endl << "Binary" << endl;
-	if(m_solver==LPSOLVE)
+	if(m_solverType==LPSOLVE)
 		ilpfile << endl << "bin ";
 	for(int j=0;j<m_numVMs;j++)
 	{
 		if(j>0)
 		{
-			if(m_solver==GUROBI)
+			if(m_solverType==GUROBI)
 				ilpfile << " ";
-			if(m_solver==LPSOLVE)
+			if(m_solverType==LPSOLVE)
 				ilpfile << ", ";
 		}
 		ilpfile << "Migr_" << j;
 	}
 	for(int i=0;i<m_numPMs;i++)
 	{
-		if(m_solver==LPSOLVE)
+		if(m_solverType==LPSOLVE)
 			ilpfile << ",";
 		ilpfile << " Active_" << i;
 	}
@@ -153,28 +162,28 @@ void IlpAllocator::create_lp(char *filename)
 	{
 		for(int i=0;i<m_numPMs;i++)
 		{
-			if(m_solver==LPSOLVE)
+			if(m_solverType==LPSOLVE)
 				ilpfile << ",";
 			ilpfile << " Alloc_" << j << "_" << i;
 		}
 	}
-	if(m_solver==GUROBI)
+	if(m_solverType==GUROBI)
 		ilpfile << endl << "End" << endl;
-	if(m_solver==LPSOLVE)
+	if(m_solverType==LPSOLVE)
 		ilpfile << ";" << endl;
 
 	ilpfile.close();
 }
 
-void IlpAllocator::solveIterative()
+void ILPAllocator::solveIterative()
 {
 	std::ostringstream command;
-	if(m_solver==GUROBI)
+	if(m_solverType==GUROBI)
 	{
 		create_lp("ilp_gurobi.lp");
 		command << "gurobi_cl Threads=1 ResultFile=sol_gurobi.sol TimeLimit=" << m_params.timeout << " ilp_gurobi.lp";
 	}
-	if(m_solver==LPSOLVE)
+	if(m_solverType==LPSOLVE)
 	{
 		create_lp("ilp_lpsolve.lp");
 		command << LPSOLVEPATH << " -timeout " << (int)round(m_params.timeout) << " ilp_lpsolve.lp > sol_lpsolve.sol";
@@ -182,11 +191,11 @@ void IlpAllocator::solveIterative()
 	system(command.str().c_str());
 }
 
-double IlpAllocator::getOptimum()
+double ILPAllocator::getOptimum()
 {
 	double result=-1;
 	std::string line;
-	if(m_solver==GUROBI)
+	if(m_solverType==GUROBI)
 	{
 		ifstream solfile("sol_gurobi.sol");
 		std::getline(solfile, line);
@@ -201,7 +210,7 @@ double IlpAllocator::getOptimum()
 //		solfile >> "# Objective value =" >> result;
 		solfile.close();
 	}
-	if(m_solver==LPSOLVE)
+	if(m_solverType==LPSOLVE)
 	{
 		ifstream solfile("sol_lpsolve.sol");
 		while(std::getline(solfile, line))

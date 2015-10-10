@@ -78,22 +78,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BnBAllocator.cpp" />
     <ClCompile Include="ConfigParser.cpp" />
-    <ClCompile Include="IlpAllocator.cpp" />
+    <ClCompile Include="ILPAllocator.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="PM.cpp" />
     <ClCompile Include="ProblemGenerator.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="VM.cpp" />
-    <ClCompile Include="VMAllocator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AllocationProblem.h" />
     <ClInclude Include="AllocatorParams.h" />
+    <ClInclude Include="BnBAllocator.h" />
+    <ClInclude Include="BnBParams.h" />
     <ClInclude Include="Change.h" />
     <ClInclude Include="ConfigParser.h" />
-    <ClInclude Include="global_params.h" />
-    <ClInclude Include="IlpAllocator.h" />
+    <ClInclude Include="ILPAllocator.h" />
+    <ClInclude Include="ILPParams.h" />
     <ClInclude Include="PM.h" />
     <ClInclude Include="ProblemGenerator.h" />
     <ClInclude Include="Timer.h" />

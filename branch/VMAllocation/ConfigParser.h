@@ -25,6 +25,10 @@ along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include "ProblemGenerator.h"
 #include "AllocatorParams.h"
+#include "ILPParams.h"
+#include "BnBParams.h"
+
+using ParamsPtrVectorType = std::vector<std::shared_ptr<AllocatorParams>>;
 
 class ConfigParser
 {
@@ -41,6 +45,7 @@ private:
 	bool showDetailedCost;
 	int numTests;
 
+	// generator parameters
 	int dimensions;
 	Steps VMs;
 	Steps PMs;
@@ -50,8 +55,15 @@ private:
 	int PMmax;
 	int numPMtypes;
 
+	// common allocator parameters
+	AllocatorType allocatorType;
 	std::string name;
 	double timeout;
+
+	// ILP only
+	SolverType solverType;
+
+	// BnB only
 	double boundThreshold;
 	int maxMigrationsRatio;
 	bool failFirst;
@@ -61,8 +73,9 @@ private:
 	bool symmetryBreaking;
 	bool initialPMFirst;
 
+	// helpers
 	std::unique_ptr<ProblemGenerator> m_generator;
-	std::vector<AllocatorParams> m_paramsList;
+	ParamsPtrVectorType m_paramsList;
 
 	bool getKeyValue(const std::string& line, std::string& key, std::string& value);
 	void processAllocator(std::ifstream& configFile);
@@ -74,7 +87,7 @@ public:
 	void parse();
 	int getNumTests();
 	std::unique_ptr<ProblemGenerator>&& getGenerator();
-	std::vector<AllocatorParams> getParamsList();
+	ParamsPtrVectorType getParamsList();
 	Steps getVMs();
 	Steps getPMs();
 	bool getShowDetailedCost();

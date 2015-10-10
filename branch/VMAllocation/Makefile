@@ -30,13 +30,13 @@ LIBRARIES             =
 vmallocation_exe_MODULE= vmallocation.exe
 vmallocation_exe_C_SRCS=
 vmallocation_exe_CXX_SRCS= PM.cpp \
+            BnBAllocator.cpp \
 			ProblemGenerator.cpp \
 			Timer.cpp \
 			VM.cpp \
-			VMAllocator.cpp \
+			ILPAllocator.cpp \
 			main.cpp \
             ConfigParser.cpp \
-            IlpAllocator.cpp
 vmallocation_exe_RC_SRCS=
 vmallocation_exe_LDFLAGS= 
 vmallocation_exe_ARFLAGS=

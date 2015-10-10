@@ -33,8 +33,8 @@ Result files are created in the .\logs folder.
 #include <fstream>
 #include <climits>
 
-#include "VMAllocator.h"
-#include "IlpAllocator.h"
+#include "BnBAllocator.h"
+#include "ILPAllocator.h"
 #include "AllocationProblem.h"
 #include "ProblemGenerator.h"
 #include "Timer.h"
@@ -46,8 +46,6 @@ using std::cout;
 using std::vector;
 using std::ofstream;
 using std::endl;
-
-//#define ILP_AVAILABLE
 
 int main()
 {
@@ -69,7 +67,7 @@ int main()
 	ConfigParser parser("config.txt");
 	parser.parse();
 	std::unique_ptr<ProblemGenerator> generator = parser.getGenerator();
-	vector <AllocatorParams> paramsList = parser.getParamsList();
+	ParamsPtrVectorType paramsList = parser.getParamsList();
 
 	// initialize result file
 	#ifdef WIN32
@@ -84,7 +82,7 @@ int main()
 
 	for (unsigned i = 0; i < paramsList.size(); i++) // columns for runtimes
 	{
-		output << paramsList[i].name;
+		output << paramsList[i]->name;
 		output << "; ";
 	}
 
@@ -95,22 +93,19 @@ int main()
 	bool showDetailedCost = parser.getShowDetailedCost();
 	for (unsigned i = 0; i < paramsList.size(); i++) // columns for costs
 	{
-		output << paramsList[i].name + ": cost";
+		output << paramsList[i]->name + ": cost";
 		output << "; ";
 
-		if (showDetailedCost)
+		if (showDetailedCost && paramsList[i]->allocatorType == BnB)
 		{
-			output << paramsList[i].name + ": PMs on";
+			output << paramsList[i]->name + ": PMs on";
 			output << "; ";
 
-			output << paramsList[i].name + ": Migrations";
+			output << paramsList[i]->name + ": Migrations";
 			output << "; ";
 		}
 	}
 
-	#ifdef ILP_AVAILABLE
-		output << "Gurobi: cost; Lpsolve: cost";
-	#endif
 	output << endl;
 
 	ConfigParser::Steps vmSteps = parser.getVMs();
@@ -138,31 +133,40 @@ int main()
 			// first allocator determines lower bound for the optimum
 			double initialLowerBound;
 			{
-				const std::string nameSaved(paramsList[0].name);
-				paramsList[0].name = "LB for optimum"; // using a dummy name instead of the real one
-				VMAllocator VMA(problem, paramsList[0], log);
-				initialLowerBound = VMA.computeInitialLowerBound();
-				paramsList[0].name = nameSaved;
+				const std::string nameSaved(paramsList[0]->name);
+				paramsList[0]->name = "LB for optimum"; // using a dummy name instead of the real one
+				BnBAllocator dummyBnB(problem, paramsList[0], log);
+				initialLowerBound = dummyBnB.computeInitialLowerBound();
+				paramsList[0]->name = nameSaved;
 			}
 
 			output << numVMs << " VMs, " << numPMs << " PMs";
 			output << "; ";
 			for (unsigned i = 0; i < paramsList.size(); i++) // run current instance for all configurations
 			{
-				cout << "\t" << paramsList[i].name << "...";
+				cout << "\t" << paramsList[i]->name << "...";
 				t.start();
-				VMAllocator VMA(problem, paramsList[i], log);
-				VMA.solveIterative();
+				std::shared_ptr<VMAllocator> vmAllocator;
+				if (paramsList[i]->allocatorType == BnB)
+				{
+					vmAllocator = std::make_shared<BnBAllocator>(problem, paramsList[i], log);
+				}
+				else if (paramsList[i]->allocatorType == ILP)
+				{
+					vmAllocator = std::make_shared<ILPAllocator>(problem, paramsList[i], log);
+				}
+				vmAllocator->solveIterative();
 				double elapsed = t.getElapsedTime();
 				cout << " DONE!" << endl;
 				output << elapsed;
 				output << "; ";
-				double opt = VMA.getOptimum();
+				double opt = vmAllocator->getOptimum();
 				solutions.push_back(opt);
-				if (showDetailedCost)
+				if (showDetailedCost && paramsList[i]->allocatorType == BnB)
 				{
-					activeHosts.push_back(VMA.getActiveHosts());
-					migrations.push_back(VMA.getMigrations());
+					std::shared_ptr<BnBAllocator> bnb = std::dynamic_pointer_cast<BnBAllocator>(vmAllocator);
+					activeHosts.push_back(bnb->getActiveHosts());
+					migrations.push_back(bnb->getMigrations());
 				}
 				#ifdef VERBOSE_BASIC			
 					log << "Solution = " << opt << endl;
@@ -178,7 +182,7 @@ int main()
 				output << solutions[i];
 				output << "; ";
 
-				if (showDetailedCost) 
+				if (showDetailedCost && paramsList[i]->allocatorType == BnB)
 				{
 					output << activeHosts[i];
 					output << "; ";
@@ -188,16 +192,6 @@ int main()
 				}
 			}
 
-			#ifdef ILP_AVAILABLE
-				IlpAllocator IA1(problem, paramsList[0], log, GUROBI);
-				IA1.solveIterative();
-				double opt = IA1.getOptimum();
-				output << opt << "; ";
-				IlpAllocator IA2(problem, paramsList[0], log, LPSOLVE);
-				IA2.solveIterative();
-				opt = IA2.getOptimum();
-				output << opt;
-			#endif
 			output << endl;
 		}
 

@@ -19,7 +19,7 @@ std::unique_ptr<ProblemGenerator>&& ConfigParser::getGenerator()
 	return std::move(m_generator);
 }
 
-std::vector<AllocatorParams> ConfigParser::getParamsList()
+ParamsPtrVectorType ConfigParser::getParamsList()
 {
 	return m_paramsList;
 }
@@ -143,7 +143,7 @@ void ConfigParser::processGeneralParameter(const std::string& key, const std::st
 	}
 	else
 	{
-		std::cout << "Invalid key in config file." << std::endl;
+		std::cout << "Invalid key in config file: "<< key << std::endl;
 		exit(1);
 	}
 }
@@ -164,17 +164,43 @@ void ConfigParser::processAllocator(std::ifstream& configFile)
 		}
 	}
 
-	AllocatorParams tempParams;
-	tempParams.name = name;
-	tempParams.timeout = timeout;
-	tempParams.boundThreshold = boundThreshold;
-	tempParams.maxMigrationsRatio = maxMigrationsRatio;
-	tempParams.failFirst = failFirst;
-	tempParams.intelligentBound = intelligentBound;
-	tempParams.VMSortMethod = VMSortMethod;
-	tempParams.PMSortMethod = PMSortMethod;
-	tempParams.symmetryBreaking = symmetryBreaking;
-	tempParams.initialPMFirst = initialPMFirst;
+	std::shared_ptr<AllocatorParams> tempParams;
+
+	if (allocatorType == BnB)
+	{
+		tempParams = std::make_shared<BnBParams>();
+	}
+	else if (allocatorType == ILP)
+	{
+		tempParams = std::make_shared<ILPParams>();
+	}
+	
+	tempParams->allocatorType = allocatorType;
+	tempParams->name = name;
+	tempParams->timeout = timeout;
+	tempParams->maxMigrationsRatio = maxMigrationsRatio;
+
+
+	std::shared_ptr<BnBParams> bnbParams = std::dynamic_pointer_cast<BnBParams>(tempParams);
+
+	if (bnbParams)
+	{
+		bnbParams->boundThreshold = boundThreshold;
+		bnbParams->failFirst = failFirst;
+		bnbParams->intelligentBound = intelligentBound;
+		bnbParams->VMSortMethod = VMSortMethod;
+		bnbParams->PMSortMethod = PMSortMethod;
+		bnbParams->symmetryBreaking = symmetryBreaking;
+		bnbParams->initialPMFirst = initialPMFirst;
+	}
+
+	std::shared_ptr<ILPParams> ilpParams = std::dynamic_pointer_cast<ILPParams>(tempParams);
+
+	if (ilpParams)
+	{
+		ilpParams->solverType = solverType;
+	}
+
 	m_paramsList.push_back(tempParams);
 }
 
@@ -184,9 +210,17 @@ void ConfigParser::processAllocatorParameter(const std::string& key, const std::
 	{
 		name = value;
 	}
+	else if (key == "allocatorType")
+	{
+		allocatorType = stringToAllocatorType(value);
+	}
 	else if (key == "timeout")
 	{
 		timeout = std::stoi(value);
+	}
+	else if (key == "solverType")
+	{
+		solverType = stringToSolverType(value);
 	}
 	else if (key == "boundThreshold")
 	{

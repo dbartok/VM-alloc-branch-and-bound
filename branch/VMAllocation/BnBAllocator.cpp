@@ -25,10 +25,10 @@ along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 #include <climits>
 
-#include "VMAllocator.h"
+#include "BnBAllocator.h"
 
 // preprocess the input problem
-void VMAllocator::preprocess()
+void BnBAllocator::preprocess()
 {
 #ifdef VERBOSE_BASIC // logging parameter configuration name and problem data
 	m_log << "Parameter configuration: " << m_params.name << std::endl;
@@ -77,7 +77,7 @@ void VMAllocator::preprocess()
 			++(m_problem.PMs[vm.initial].numAdditionalVMs);
 		}
 		m_numAdditionalPMs = std::count_if(m_problem.PMs.cbegin(), m_problem.PMs.cend(), [](const PM& pm) {return pm.numAdditionalVMs > 0; });
-		m_maxNumVMsOnOnePM = std::max_element(m_problem.PMs.cbegin(), m_problem.PMs.cend(), 
+		m_maxNumVMsOnOnePM = std::max_element(m_problem.PMs.cbegin(), m_problem.PMs.cend(),
 		[](const PM& pm1, const PM& pm2)
 		{
 			return pm1.numAdditionalVMs < pm2.numAdditionalVMs;
@@ -124,7 +124,7 @@ void VMAllocator::preprocess()
 
 
 // returns true if the current allocation is valid
-bool VMAllocator::isAllocationValid()
+bool BnBAllocator::isAllocationValid()
 {
 	for (int pm = 0; pm < m_numPMs; pm++)
 	{
@@ -138,7 +138,7 @@ bool VMAllocator::isAllocationValid()
 }
 
 // allocates a VM to a PM
-void VMAllocator::allocate(VM* VMHandled, PM* PMCandidate)
+void BnBAllocator::allocate(VM* VMHandled, PM* PMCandidate)
 {
 	assert(m_allocations[VMHandled->id] == -1); // we should only allocate unallocated VMs
 
@@ -232,7 +232,7 @@ void VMAllocator::allocate(VM* VMHandled, PM* PMCandidate)
 }
 
 //deallocates a VM
-void VMAllocator::deAllocate(VM* VMHandled)
+void BnBAllocator::deAllocate(VM* VMHandled)
 {
 	int PMCandidateIndex = m_allocations[VMHandled->id];
 	assert(PMCandidateIndex != -1); // we should only deallocate VMs which were allocated
@@ -303,8 +303,8 @@ void VMAllocator::deAllocate(VM* VMHandled)
 	{
 		m_numMigrations--;
 	}
-	
-		
+
+
 	Change change = m_changeStack.top();
 	m_changeStack.pop();
 
@@ -323,17 +323,17 @@ void VMAllocator::deAllocate(VM* VMHandled)
 			assert(false); // PM can't already be in the list, because it was removed
 		}
 	}
-	
+
 }
 
 // returns true if all VMs are allocated
-bool VMAllocator::allVMsAllocated()
+bool BnBAllocator::allVMsAllocated()
 {
 	return m_VMStack.size() == m_numVMs - 1;
 }
 
 // returns true if two PMs should be considered the same in symmetry breaking
-bool VMAllocator::PMsAreTheSame(const PM& pm1, const PM& pm2)
+bool BnBAllocator::PMsAreTheSame(const PM& pm1, const PM& pm2)
 {
 	for (int i = 0; i < m_dimension; i++)
 	{
@@ -345,7 +345,7 @@ bool VMAllocator::PMsAreTheSame(const PM& pm1, const PM& pm2)
 }
 
 // returns true if the VM fits in the PM
-bool VMAllocator::VMFitsInPM(const VM& vm, const PM& pm)
+bool BnBAllocator::VMFitsInPM(const VM& vm, const PM& pm)
 {
 	for (int i = 0; i < m_dimension; i++)
 	{
@@ -359,7 +359,7 @@ bool VMAllocator::VMFitsInPM(const VM& vm, const PM& pm)
 }
 
 // returns the next VM
-VM* VMAllocator::getNextVM()
+VM* BnBAllocator::getNextVM()
 {
 	// find VM candidate with smallest amount of available values
 	if (m_params.failFirst)
@@ -393,7 +393,7 @@ VM* VMAllocator::getNextVM()
 }
 
 // initialize PM candidates for every VM
-void VMAllocator::initializePMCandidates()
+void BnBAllocator::initializePMCandidates()
 {
 	for (int i = 0; i < m_numVMs; i++)
 	{
@@ -402,13 +402,13 @@ void VMAllocator::initializePMCandidates()
 }
 
 // returns true if current branch is exhausted in the search tree
-bool VMAllocator::currentBranchExhausted(VM* VMHandled)
+bool BnBAllocator::currentBranchExhausted(VM* VMHandled)
 {
 	return (VMHandled->PMIterator == VMHandled->availablePMs.end());
 }
 
 // resets PM candidates for a VM
-void VMAllocator::resetCandidates(VM* VMHandled)
+void BnBAllocator::resetCandidates(VM* VMHandled)
 {
 	std::vector<PM*>* pms = &(VMHandled->availablePMs);
 
@@ -449,13 +449,13 @@ void VMAllocator::resetCandidates(VM* VMHandled)
 	VMHandled->PMIterator = VMHandled->availablePMs.begin();
 }
 
-void VMAllocator::saveVM(VM* VMHandled)
+void BnBAllocator::saveVM(VM* VMHandled)
 {
 	m_VMStack.push(VMHandled);
 }
 
 // backtracks to previous VM and returns it
-VM* VMAllocator::backtrackToPreviousVM()
+VM* BnBAllocator::backtrackToPreviousVM()
 {
 	//stack should never be empty
 	assert(!(m_VMStack.empty()));
@@ -466,13 +466,13 @@ VM* VMAllocator::backtrackToPreviousVM()
 }
 
 // returns true if all possibilities are exhausted in the search tree
-bool VMAllocator::allPossibilitiesExhausted()
+bool BnBAllocator::allPossibilitiesExhausted()
 {
 	return m_VMStack.empty();
 }
 
 // returns next PM candidate for VM
-PM* VMAllocator::getNextPMCandidate(VM* VMHandled)
+PM* BnBAllocator::getNextPMCandidate(VM* VMHandled)
 {
 	PM* PMCandidate = *(VMHandled->PMIterator);
 	setNextPMCandidate(VMHandled);
@@ -480,7 +480,7 @@ PM* VMAllocator::getNextPMCandidate(VM* VMHandled)
 }
 
 // sets next PM candidate for VM (automatically called by getter)
-void VMAllocator::setNextPMCandidate(VM* VMHandled)
+void BnBAllocator::setNextPMCandidate(VM* VMHandled)
 {
 	assert(VMHandled->PMIterator != VMHandled->availablePMs.end()); // there should still be more candidates
 
@@ -510,7 +510,7 @@ void VMAllocator::setNextPMCandidate(VM* VMHandled)
 	}
 }
 
-double VMAllocator::computeMinimalExtraCost()
+double BnBAllocator::computeMinimalExtraCost()
 {
 	int remainingMigrations = m_numMaxMigrations - m_numMigrations;
 
@@ -529,9 +529,16 @@ double VMAllocator::computeMinimalExtraCost()
 	return minimalExtraCost;
 }
 
-VMAllocator::VMAllocator(AllocationProblem pr, AllocatorParams pa, std::ofstream& l)
-	:m_problem(pr), m_params(pa), m_log(l), m_additionalVMCounts(m_problem.VMs.size()+1, 0)
+BnBAllocator::BnBAllocator(AllocationProblem pr, std::shared_ptr<AllocatorParams> pa, std::ofstream& l)
+	:m_problem(pr), m_log(l), m_additionalVMCounts(m_problem.VMs.size() + 1, 0)
 {
+	std::shared_ptr<BnBParams> params = std::dynamic_pointer_cast<BnBParams>(pa);
+
+	if (!params)
+		std::cout << "Error: invalid parameters type for BnBAllocator." << std::endl;
+
+	m_params = *params;
+
 	m_numVMs = m_problem.VMs.size();
 	m_numPMs = m_problem.PMs.size();
 	m_dimension = m_problem.VMs[0].demand.size(); // only works if all VMs have the same number of dimensions
@@ -540,7 +547,7 @@ VMAllocator::VMAllocator(AllocationProblem pr, AllocatorParams pa, std::ofstream
 	m_numMaxMigrations = m_numPMs / m_params.maxMigrationsRatio;
 
 	// at the start there are no allocations
-	m_numMigrations = 0; 
+	m_numMigrations = 0;
 	m_numPMsOn = 0;
 	m_bestSoFar = INT_MAX;
 	m_bestSoFarNumMigrations = INT_MAX;
@@ -564,7 +571,7 @@ VMAllocator::VMAllocator(AllocationProblem pr, AllocatorParams pa, std::ofstream
 }
 
 // solves the allocation problem and stores the results in member variables
-void VMAllocator::solveIterative()
+void BnBAllocator::solveIterative()
 {
 	m_timer.start();
 
@@ -582,7 +589,7 @@ void VMAllocator::solveIterative()
 			#ifdef VERBOSE_BASIC
 				m_log << "TIMED OUT." << std::endl;
 			#endif
-				break;
+			break;
 		}
 
 		if (currentBranchExhausted(VMHandled)) // current branch is exhausted
@@ -638,7 +645,7 @@ void VMAllocator::solveIterative()
 
 		double cost = COEFF_NR_OF_ACTIVE_HOSTS * m_numPMsOn + COEFF_NR_OF_MIGRATIONS * m_numMigrations;
 		#ifdef VERBOSE_ALG_STEPS
-		m_log << "numPMsOn = " << m_numPMsOn << ", numMigrations = " << m_numMigrations <<", cost is: "<< cost << ". " << std::endl;
+			m_log << "numPMsOn = " << m_numPMsOn << ", numMigrations = " << m_numMigrations <<", cost is: "<< cost << ". " << std::endl;
 		#endif
 
 		double minimalTotalCost = cost;
@@ -648,7 +655,7 @@ void VMAllocator::solveIterative()
 			double extraCost = computeMinimalExtraCost();
 			minimalTotalCost += extraCost;
 			#ifdef VERBOSE_ALG_STEPS
-			m_log << "Computed minimal extra cost = " << extraCost << ", minimal total cost = " << minimalTotalCost << std::endl;
+				m_log << "Computed minimal extra cost = " << extraCost << ", minimal total cost = " << minimalTotalCost << std::endl;
 			#endif
 		}
 
@@ -699,10 +706,10 @@ void VMAllocator::solveIterative()
 }
 
 // returns the cost of the optimal allocation
-double VMAllocator::getOptimum()
+double BnBAllocator::getOptimum()
 {
 	#ifdef VERBOSE_BASIC
-		m_log << std::endl <<"alloc:\t";
+		m_log << std::endl << "alloc:\t";
 		for (auto PM : m_bestAllocation)
 		{
 			m_log << m_problem.PMs[PM].id << " ";
@@ -715,18 +722,18 @@ double VMAllocator::getOptimum()
 
 // computes an initial lower bound for the optimum
 // must be called before the start of the algorithm, but after preprocessing
-double VMAllocator::computeInitialLowerBound()
+double BnBAllocator::computeInitialLowerBound()
 {
 	return computeMinimalExtraCost();
 }
 
 // get cost components
-int VMAllocator::getActiveHosts()
+int BnBAllocator::getActiveHosts()
 {
 	return m_bestSoFarNumPMsOn;
 }
 
-int VMAllocator::getMigrations()
+int BnBAllocator::getMigrations()
 {
 	return m_bestSoFarNumMigrations;
 }

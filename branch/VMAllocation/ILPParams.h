@@ -17,21 +17,39 @@ You should have received a copy of the GNU General Public License
 along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef VMALLOCATOR_H
-#define VMALLOCATOR_H
+#ifndef ILPPARAMS_H
+#define ILPPARAMS_H
 
-#include "AllocationProblem.h"
+#include <iostream>
+
 #include "AllocatorParams.h"
 
-#define COEFF_NR_OF_ACTIVE_HOSTS 10
-#define COEFF_NR_OF_MIGRATIONS 1
-
-class VMAllocator
+enum SolverType
 {
-public:
-	//VMAllocator(AllocationProblem pr, AllocatorParams pa, std::ofstream& l);
-	virtual void solveIterative() = 0;
-	virtual double getOptimum() = 0;
+	LPSOLVE,
+	GUROBI
 };
+
+struct ILPParams : public AllocatorParams
+{
+	SolverType solverType;
+};
+
+static SolverType stringToSolverType(const std::string& toConvert)
+{
+	if (toConvert == "LPSOLVE")
+	{
+		return LPSOLVE;
+	}
+	else if (toConvert == "GUROBI")
+	{
+		return GUROBI;
+	}
+	else
+	{
+		std::cout << "WARNING: Invalid Solver Type. Defaulting to LPSOLVE." << std::endl;
+		return LPSOLVE;
+	}
+}
 
 #endif
