@@ -121,10 +121,47 @@ int main()
 		for (int i = 0; i < parser.getNumTests(); i++) // run for all instances
 		{
 			cout << "Instance " << i << ":" << endl;
+
+			AllocationProblem problem = generator->generate_ff();
+
+			// logging problem data
 			#ifdef VERBOSE_BASIC	
 				log << "Instance " << i << ":" << endl;
+
+				int dimension = problem.VMs[0].demand.size();
+				log << std::endl << "PMs:\t";
+				for (auto pm : problem.PMs)
+				{
+					log << "[";
+					for (int i = 0; i < dimension; i++)
+					{
+						log << pm.capacity[i];
+						if (i != dimension - 1)
+							log << " ";
+					}
+
+					log << "] ";
+				}
+				log << std::endl << "VMs:\t";
+				for (auto vm : problem.VMs)
+				{
+					log << "[";
+					for (int i = 0; i < dimension; i++)
+					{
+						log << vm.demand[i];
+						if (i != dimension - 1)
+							log << " ";
+					}
+
+					log << "] ";
+				}
+				log << std::endl << "init:\t";
+				for (auto vm : problem.VMs)
+				{
+					log << vm.id << "->" << vm.initialID << " ";
+				}
+				log << std::endl << std::endl;
 			#endif
-				AllocationProblem problem = generator->generate_ff();
 
 			vector<double> solutions; // costs
 			vector<int> activeHosts;
@@ -145,6 +182,11 @@ int main()
 			for (unsigned i = 0; i < paramsList.size(); i++) // run current instance for all configurations
 			{
 				cout << "\t" << paramsList[i]->name << "...";
+
+				#ifdef VERBOSE_BASIC	
+					log << "Parameter configuration: " << paramsList[i]->name << std::endl << std::endl;
+				#endif
+
 				t.start();
 				std::shared_ptr<VMAllocator> vmAllocator;
 				if (paramsList[i]->allocatorType == BnB)
@@ -155,12 +197,12 @@ int main()
 				{
 					vmAllocator = std::make_shared<ILPAllocator>(problem, paramsList[i], log);
 				}
-				vmAllocator->solveIterative();
+				vmAllocator->solve();
 				double elapsed = t.getElapsedTime();
 				cout << " DONE!" << endl;
 				output << elapsed;
 				output << "; ";
-				double opt = vmAllocator->getOptimum();
+				double opt = vmAllocator->getBestCost();
 				solutions.push_back(opt);
 				if (showDetailedCost && paramsList[i]->allocatorType == BnB)
 				{
@@ -170,7 +212,7 @@ int main()
 				}
 				#ifdef VERBOSE_BASIC			
 					log << "Solution = " << opt << endl;
-					log << "==============================" << endl;
+					log << "------------------" << endl;
 				#endif
 			}
 
@@ -193,9 +235,15 @@ int main()
 			}
 
 			output << endl;
+			#ifdef VERBOSE_BASIC			
+				log << "===== End of instance =====" << endl;
+			#endif
 		}
 
 		output << endl;
+		#ifdef VERBOSE_BASIC			
+			log << "===== End of simulation for this size =====" << endl;
+		#endif
 		numVMs += vmSteps.step;
 		numPMs += pmSteps.step;
 	}

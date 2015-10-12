@@ -118,7 +118,7 @@ void ILPAllocator::create_lp(char *filename)
 	//Migrations
 	for(int j=0;j<m_numVMs;j++)
 	{
-		int initial=m_problem.VMs[j].initial;
+		int initial=m_problem.VMs[j].initialID;
 		ilpfile << "Alloc_" << j << "_" << initial << " + Migr_" << j << " = 1";
 		if(m_solverType==GUROBI)
 			ilpfile << endl;
@@ -175,7 +175,7 @@ void ILPAllocator::create_lp(char *filename)
 	ilpfile.close();
 }
 
-void ILPAllocator::solveIterative()
+void ILPAllocator::solve()
 {
 	std::ostringstream command;
 	if(m_solverType==GUROBI)
@@ -191,7 +191,8 @@ void ILPAllocator::solveIterative()
 	system(command.str().c_str());
 }
 
-double ILPAllocator::getOptimum()
+// returns the cost of the best allocation found, or -1 when no allocation was found
+double ILPAllocator::getBestCost()
 {
 	double result=-1;
 	std::string line;

@@ -28,7 +28,7 @@ struct Change
 {
 	VM* VMAllocated;
 	PM* targetPM;
-	std::vector<int> doNotFitAnymore; // list of VMs that do not fit onto the target PM anymore
+	std::vector<VM*> doNotFitAnymore; // list of VMs that do not fit onto the target PM anymore
 };
 
 #endif

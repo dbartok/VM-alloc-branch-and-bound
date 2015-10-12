@@ -20,18 +20,44 @@ along with VMAllocation. If not, see <http://www.gnu.org/licenses/>.
 #ifndef VMALLOCATOR_H
 #define VMALLOCATOR_H
 
+#include <functional>
+#include <unordered_map>
+
 #include "AllocationProblem.h"
-#include "AllocatorParams.h"
 
 #define COEFF_NR_OF_ACTIVE_HOSTS 10
 #define COEFF_NR_OF_MIGRATIONS 1
 
+using AllocationMapType = std::unordered_map <VM*, PM*>;
+
 class VMAllocator
 {
 public:
-	//VMAllocator(AllocationProblem pr, AllocatorParams pa, std::ofstream& l);
-	virtual void solveIterative() = 0;
-	virtual double getOptimum() = 0;
+	// solves the allocation problem
+	virtual void solve() = 0;
+
+	// returns the cost of the best allocation found, or -1 when no allocation was found
+	virtual double getBestCost() = 0;
+
+	// --- the following functions are not mandatory to implement ---
+
+	// returns the best allocation found
+	virtual const AllocationMapType& getBestAllocation()
+	{
+		throw std::bad_function_call("getBestAllocation() is not implemented for this class");
+	}
+	
+	// return the number of active hosts in the best allocation
+	virtual int getActiveHosts()
+	{
+		throw std::bad_function_call("getActiveHosts() is not implemented for this class");
+	}
+
+	// return the number of migrations in the best allocation
+	virtual int getMigrations()
+	{
+		throw std::bad_function_call("getMigrations() is not implemented for this class");
+	}
 };
 
 #endif

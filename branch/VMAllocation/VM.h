@@ -28,7 +28,7 @@ struct VM
 {
 	int id;
 	std::vector<int> demand;
-	int initial; // ID of initially assigned PM
+	int initialID; // ID of initially assigned PM
 	PM* initialPM;
 	std::vector<PM*>::iterator PMIterator; // "index" in the availablePMs array
 	std::vector<PM*> availablePMs;

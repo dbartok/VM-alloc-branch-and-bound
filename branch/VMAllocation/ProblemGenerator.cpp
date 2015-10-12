@@ -60,7 +60,7 @@ AllocationProblem ProblemGenerator::generate()
 		VM vm;
 		for (int j = 0; j < dimension; j++)
 			vm.demand.push_back(randomIntBetween(minResDemand, maxResDemand));
-		vm.initial = randomIntBetween(0, numPMs - 1);
+		vm.initialID = randomIntBetween(0, numPMs - 1);
 		vm.id = i;
 
 		VMs.push_back(vm);
@@ -120,7 +120,7 @@ AllocationProblem ProblemGenerator::generate_ff()
 		}
 		if(found)
 		{
-			problem.VMs[i].initial=j-1;
+			problem.VMs[i].initialID=j-1;
 			for(unsigned k=0; k<problem.PMs[j-1].resourcesFree.size(); k++)
 				problem.PMs[j-1].resourcesFree[k]-=problem.VMs[i].demand[k];
 		}
@@ -161,7 +161,7 @@ AllocationProblem ProblemGenerator::testFromFile(std::string path)
 		}
 
 		fileIn >> buffer;
-		vm.initial = buffer;
+		vm.initialID = buffer;
 		vm.id = i;
 		VMs.push_back(vm);
 	}

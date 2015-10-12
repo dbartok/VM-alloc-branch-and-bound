@@ -45,8 +45,8 @@ class ILPAllocator : public VMAllocator
 
 public:
 	ILPAllocator(AllocationProblem pr, std::shared_ptr<AllocatorParams> pa, std::ofstream& l);
-	void solveIterative() final override;
-	double getOptimum() final override;
+	void solve() final override;
+	double getBestCost() final override;
 };
 
 #endif /* ILPALLOCATOR_H */

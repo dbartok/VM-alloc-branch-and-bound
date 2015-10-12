@@ -51,12 +51,12 @@ class BnBAllocator : public VMAllocator
 	int m_maxNumVMsOnOnePM; // maximal number of "initial VMs" on one PM (initialized once, but not maintained)
 	std::vector<int> m_additionalVMCounts; // maps number of occurences to each "additional VM count"
 
-	std::vector<int> m_allocations; // current allocations
-	std::vector<int> m_bestAllocation; // best allocation so far
+	AllocationMapType m_allocations; // current allocations
+	AllocationMapType m_bestAllocation; // best allocation so far
 	int m_numMaxMigrations;
 	int m_numMigrations;
 	int m_numPMsOn;
-	double m_bestSoFar; // best cost so far
+	double m_bestCostSoFar; // best cost so far
 	int m_bestSoFarNumMigrations;
 	int m_bestSoFarNumPMsOn;
 
@@ -89,11 +89,13 @@ class BnBAllocator : public VMAllocator
 
 public:
 	BnBAllocator(AllocationProblem pr, std::shared_ptr<AllocatorParams> pa, std::ofstream& l);
-	void solveIterative() final override;
+	void solve() final override;
+	double getBestCost() final override;
+	const AllocationMapType& getBestAllocation() final override;
+	int getActiveHosts() final override;
+	int getMigrations() final override;
+
 	double computeInitialLowerBound();
-	double getOptimum() final override;
-	int getActiveHosts();
-	int getMigrations();
 
 };
 
